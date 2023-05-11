@@ -1,0 +1,144 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+using eSyaNatureCure.DO;
+using eSyaNatureCure.IF;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
+
+namespace eSyaNatureCure.WebAPI.Controllers
+{
+    [Route("api/[controller]/[action]")]
+    [ApiController]
+    public class PackageMasterController : ControllerBase
+    {
+        private readonly IPackageMasterRepository _PackageMasterRepository;
+       
+        public PackageMasterController(IPackageMasterRepository PackageMasterRepository)
+        {
+            _PackageMasterRepository = PackageMasterRepository;
+           
+        }
+
+        #region Package Master
+        /// <summary>
+        /// Getting  Package Master.
+        /// UI Reffered - Package Master
+        /// </summary>
+        [HttpGet]
+        public async Task<IActionResult> GetAllPackageMasters()
+        {
+            var pkg_masters =await _PackageMasterRepository.GetAllPackageMasters();
+            return Ok (pkg_masters);
+        }
+
+        /// <summary>
+        /// Getting Active Package Master for dropdown.
+        /// UI Reffered - Package Master
+        /// </summary>
+        [HttpGet]
+        public async Task<IActionResult> GetActivePackageMasters()
+        {
+            var pkg_masters = await _PackageMasterRepository.GetActivePackageMasters();
+            return Ok(pkg_masters);
+        }
+
+        /// <summary>
+        /// Insert  Package Master.
+        /// UI Reffered -Package Master
+        /// </summary>
+        [HttpPost]
+        public async Task<IActionResult> InsertPackageMaster(DO_PackageMaster obj)
+        {
+            var msg = await _PackageMasterRepository.InsertPackageMaster(obj);
+            return Ok(msg);
+
+        }
+
+        /// <summary>
+        /// Update  Package Master.
+        /// UI Reffered -Package Master
+        /// </summary>
+        [HttpPost]
+        public async Task<IActionResult> UpdatePackageMaster(DO_PackageMaster obj)
+        {
+            var msg = await _PackageMasterRepository.UpdatePackageMaster(obj);
+            return Ok(msg);
+
+        }
+        /// <summary>
+        /// Active/De Active Package Master.
+        /// UI Reffered -Package Master
+        /// Params status-packageId
+        /// </summary>
+        [HttpGet]
+        public async Task<IActionResult> ActiveOrDeActivePackageMaster(bool status, int packageId)
+        {
+            var msg = await _PackageMasterRepository.ActiveOrDeActivePackageMaster(status, packageId);
+            return Ok(msg);
+
+        }
+
+        /// <summary>
+        /// Getting Check InWee kDays By PackageId
+        /// UI Reffered - Package Master
+        /// </summary>
+        [HttpGet]
+        public async Task<IActionResult> GetCheckInWeekDaysByPackageId(int packageId)
+        {
+            var pkg_days = await _PackageMasterRepository.GetCheckInWeekDaysByPackageId(packageId);
+            return Ok(pkg_days);
+        }
+        #endregion Package Master
+
+        #region Blocked Package
+        /// <summary>
+        /// Getting  Blocked Packages by Business key for Grid.
+        /// UI Reffered - Blocked Package
+        /// </summary>
+        [HttpGet]
+        public async Task<IActionResult> GetBlockedPackagesbyBusinessKey(int businesskey)
+        {
+            var blocked_pkg_= await _PackageMasterRepository.GetBlockedPackagesbyBusinessKey(businesskey);
+            return Ok(blocked_pkg_);
+        }
+
+        /// <summary>
+        /// Insert  Blocked Package.
+        /// UI Reffered -Blocked Package
+        /// </summary>
+        [HttpPost]
+        public async Task<IActionResult> InserBlockedPackage(DO_BlockedPackage obj)
+        {
+            var msg = await _PackageMasterRepository.InserBlockedPackage(obj);
+            return Ok(msg);
+
+        }
+
+        /// <summary>
+        /// Update  Blocked Package.
+        /// UI Reffered -Blocked Package
+        /// </summary>
+        [HttpPost]
+        public async Task<IActionResult> UpdateBlockedPackage(DO_BlockedPackage obj)
+        {
+            var msg = await _PackageMasterRepository.UpdateBlockedPackage(obj);
+            return Ok(msg);
+
+        }
+
+        /// <summary>
+        /// Active/D-Active  Blocked Package.
+        /// UI Reffered -Blocked Package
+        /// </summary>
+        [HttpPost]
+        public async Task<IActionResult> ActiveOrDeActiveBlockedPackage(DO_BlockedPackage obj)
+        {
+            var msg = await _PackageMasterRepository.ActiveOrDeActiveBlockedPackage(obj);
+            return Ok(msg);
+
+        }
+        #endregion
+    }
+}

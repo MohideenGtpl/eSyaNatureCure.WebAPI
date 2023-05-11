@@ -1,0 +1,58 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+using eSyaNatureCure.DO;
+using eSyaNatureCure.IF;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
+
+namespace eSyaNatureCure.WebAPI.Controllers
+{
+    [Route("api/[controller]/[action]")]
+    [ApiController]
+    public class GuestCheckOutController : ControllerBase
+    {
+        private readonly IGuestCheckOutRepository _guestCheckOutRepository;
+
+        public GuestCheckOutController(IGuestCheckOutRepository guestCheckOutRepository)
+        {
+            _guestCheckOutRepository = guestCheckOutRepository;
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> CreateGuestBill(DO_PatientBillHeader obj)
+        {
+            var gd = await _guestCheckOutRepository.CreateGuestBill(obj);
+            return Ok(gd);
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> GetGuestServiceBilling(int businessKey, long bookingKey)
+        {
+            var gd = await _guestCheckOutRepository.GetGuestServiceBilling(businessKey, bookingKey);
+            return Ok(gd);
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> GetGuestBillingSummary(int businessKey, long bookingKey)
+        {
+            var gd = await _guestCheckOutRepository.GetGuestBillingSummary(businessKey, bookingKey);
+            return Ok(gd);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> GuestCheckOutProcess(DO_GuestCheckInDetails obj)
+        {
+            var gd = await _guestCheckOutRepository.GuestCheckOutProcess(obj);
+            return Ok(gd);
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> GetGuestCheckOutStatus(int businessKey, long bookingKey, int guestId)
+        {
+            var gd = await _guestCheckOutRepository.GetGuestCheckOutStatus(businessKey, bookingKey, guestId);
+            return Ok(gd);
+        }
+    }
+}

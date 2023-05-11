@@ -1,0 +1,216 @@
+﻿using eSyaNatureCure.DL.Entities;
+using eSyaNatureCure.DO;
+using eSyaNatureCure.IF;
+using Microsoft.EntityFrameworkCore;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace eSyaNatureCure.DL.Repository
+{
+   public class PolicyTypeRepository:IPolicyTypeRepository
+    {
+        #region Policy Type
+        public async Task<List<DO_ApplicationCodes>> GetPolicyTyesbyCodeType(int codetype)
+        {
+            using (var db = new eSyaEnterprise())
+            {
+                try
+                {
+                    var ds = db.GtEcapcd.Where(x=>x.CodeType==codetype && x.ActiveStatus==true)
+                        .Select(x => new DO_ApplicationCodes
+                        {
+                            ApplicationCode = x.ApplicationCode,
+                            CodeDesc = x.CodeDesc
+                        }).ToListAsync();
+                    return await ds;
+
+
+                }
+                catch (Exception ex)
+                {
+                    throw ex;
+                }
+            }
+        }
+
+        public async Task<List<DO_PolicyType>> GetAllPolicyTypebyId(int policytypeId)
+        {
+            using (var db = new eSyaEnterprise())
+            {
+                try
+                {
+                    if (policytypeId == 0)
+                    {
+                        var ds = db.GtGpterm.Join(db.GtEcapcd,
+                          x => x.PolicyType,
+                          y => y.ApplicationCode,
+                          (x, y) => new DO_PolicyType
+
+                          {
+                              PolicyType = x.PolicyType,
+                              SerialNumber = x.SerialNumber,
+                              PolicyStatement = x.PolicyStatement,
+                              ActiveStatus = x.ActiveStatus,
+                              PolicyTypeDesc = y.CodeDesc
+                          }).ToListAsync();
+                        return await ds;
+                    }
+
+                    else
+                    {
+
+                        var ds = db.GtGpterm.Where(p=>p.PolicyType== policytypeId).Join(db.GtEcapcd,
+                           x => x.PolicyType,
+                           y => y.ApplicationCode,
+                           (x, y) => new DO_PolicyType
+
+                           {
+                               PolicyType = x.PolicyType,
+                               SerialNumber = x.SerialNumber,
+                               PolicyStatement = x.PolicyStatement,
+                               ActiveStatus = x.ActiveStatus,
+                               PolicyTypeDesc = y.CodeDesc
+                           }).ToListAsync();
+                        return await ds;
+                    }
+
+                }
+                catch (Exception ex)
+                {
+                    throw ex;
+                }
+            }
+        }
+
+        public async Task<DO_ReturnParameter> InsertPolicyType(DO_PolicyType obj)
+        {
+            using (eSyaEnterprise db = new eSyaEnterprise())
+            {
+                using (var dbContext = db.Database.BeginTransaction())
+                {
+                    try
+                    {
+                        
+                            int maxval = db.GtGpterm.Select(a => a.SerialNumber).DefaultIfEmpty().Max();
+                            int serialNo = maxval + 1;
+                            var p_type = new GtGpterm
+                            {
+                                PolicyType = obj.PolicyType,
+                                SerialNumber = serialNo,
+                                PolicyStatement = obj.PolicyStatement,
+                                ActiveStatus = obj.ActiveStatus,
+                                FormId = obj.FormId,
+                                CreatedBy = obj.UserID,
+                                CreatedOn = DateTime.Now,
+                                CreatedTerminal = obj.TerminalID
+                            };
+
+                            db.GtGpterm.Add(p_type);
+                            await db.SaveChangesAsync();
+                            dbContext.Commit();
+                            return new DO_ReturnParameter() { Status = true, Message = "Policy Created Successfully" };
+
+                        
+                       
+                    }
+                    catch (DbUpdateException ex)
+                    {
+                        dbContext.Rollback();
+                        throw new Exception(CommonMethod.GetValidationMessageFromException(ex));
+                    }
+                    catch (Exception ex)
+                    {
+                        dbContext.Rollback();
+                        throw ex;
+                    }
+                }
+            }
+        }
+
+        public async Task<DO_ReturnParameter> UpdatePolicyType(DO_PolicyType obj)
+        {
+            using (eSyaEnterprise db = new eSyaEnterprise())
+            {
+                using (var dbContext = db.Database.BeginTransaction())
+                {
+
+                    try
+                    {
+                        var p_type = db.GtGpterm.FirstOrDefault(x => x.PolicyType == obj.PolicyType && x.SerialNumber==obj.SerialNumber);
+                        if (p_type != null)
+                        {
+
+                            p_type.PolicyStatement = obj.PolicyStatement;
+                            p_type.ActiveStatus = obj.ActiveStatus;
+                            p_type.ModifiedBy = obj.UserID;
+                            p_type.ModifiedOn = DateTime.Now;
+                            p_type.ModifiedTerminal = obj.TerminalID;
+                            await db.SaveChangesAsync();
+                            dbContext.Commit();
+                            return new DO_ReturnParameter() { Status = true, Message = "Policy Updated sucessfully." };
+                           
+                        }
+                        else
+                        {
+                            return new DO_ReturnParameter() { Status = false, Message = "Couldn't find Policy" };
+                        }
+
+                    }
+                    catch (DbUpdateException ex)
+                    {
+                        dbContext.Rollback();
+                        throw new Exception(CommonMethod.GetValidationMessageFromException(ex));
+                    }
+                    catch (Exception ex)
+                    {
+                        dbContext.Rollback();
+                        throw ex;
+                    }
+                }
+            }
+        }
+
+        public async Task<DO_ReturnParameter> ActiveOrDeActivePolicyType(bool status, int policytypeId,int serialNo)
+        {
+            using (var db = new eSyaEnterprise())
+            {
+                using (var dbContext = db.Database.BeginTransaction())
+                {
+                    try
+                    {
+                        GtGpterm p_type = db.GtGpterm.Where(p => p.PolicyType == policytypeId && p.SerialNumber== serialNo).FirstOrDefault();
+                        if (p_type == null)
+                        {
+                            return new DO_ReturnParameter() { Status = false, Message = "Policy  is not exist" };
+                        }
+
+                        p_type.ActiveStatus = status;
+                        await db.SaveChangesAsync();
+                        dbContext.Commit();
+
+                        if (status == true)
+                            return new DO_ReturnParameter() { Status = true, Message = "Policy  Activated Successfully." };
+                        else
+                            return new DO_ReturnParameter() { Status = true, Message = "Policy  De Activated Successfully." };
+                    }
+                    catch (DbUpdateException ex)
+                    {
+                        dbContext.Rollback();
+                        throw new Exception(CommonMethod.GetValidationMessageFromException(ex));
+
+                    }
+                    catch (Exception ex)
+                    {
+                        dbContext.Rollback();
+                        throw ex;
+                    }
+                }
+            }
+        }
+
+        #endregion Policy Type
+    }
+}

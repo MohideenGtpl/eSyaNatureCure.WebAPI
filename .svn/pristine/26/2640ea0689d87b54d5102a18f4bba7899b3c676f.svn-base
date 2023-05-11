@@ -1,0 +1,134 @@
+﻿using eSyaNatureCure.DL.Entities;
+using eSyaNatureCure.DO;
+using eSyaNatureCure.DO.StaticVariables;
+using eSyaNatureCure.IF;
+using Microsoft.EntityFrameworkCore;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace eSyaNatureCure.DL.Repository
+{
+    public class GuestPaymentRepository : IGuestPaymentRepository
+    {
+        public async Task<DO_ReturnParameter> InsertPatientReceipt(DO_GuestPaymentReceiptDetails obj)
+        {
+            using (var db = new eSyaEnterprise())
+            {
+                using (var dbContext = db.Database.BeginTransaction())
+                {
+                    try
+                    {
+                        obj.FinancialYear = System.DateTime.Now.Year;
+                        obj.VoucherDate = System.DateTime.Now;
+
+                        int DocID_Receipt = DocumentIdValues.guest_ReceiptId;
+                        obj.FinancialYear = System.DateTime.Now.Year;
+                        var dc_pr = db.GtEcdcbn
+                                        .Where(w => w.BusinessKey == obj.BusinessKey && w.FinancialYear == obj.FinancialYear
+                                            && w.DocumentId == DocID_Receipt).FirstOrDefault();
+                        dc_pr.CurrentDocNumber++;
+                        obj.VoucherDate = System.DateTime.Now;
+                        obj.VoucherKey = decimal.Parse(obj.FinancialYear.ToString().Substring(2, 2) + obj.BusinessKey.ToString() + dc_pr.CurrentDocNumber);
+
+                        GtEfprdt obj_PR = new GtEfprdt
+                        {
+                            BusinessKey = obj.BusinessKey,
+                            FinancialYear = obj.FinancialYear,
+                            BookTypeId = DocID_Receipt,
+                            VoucherNumber = dc_pr.CurrentDocNumber,
+                            VoucherKey = obj.VoucherKey,
+                            VoucherType = obj.VoucherType,
+                            VoucherDate = obj.VoucherDate,
+                            VoucherAmount = obj.VoucherAmount,
+                            CollectedAmount = obj.CollectedAmount,
+                            RefundAmount = obj.RefundAmount,
+                            CancelledAmount = obj.CancelledAmount,
+                            Narration = obj.Narration,
+                            BillDocumentKey = obj.BillDocumentKey,
+                            ActiveStatus = true,
+                            FormId = "0",
+                            CreatedBy = 1,
+                            CreatedOn = DateTime.Now,
+                            CreatedTerminal = System.Environment.MachineName,
+                        };
+                        db.GtEfprdt.Add(obj_PR);
+
+                        GtEfprpm gt_PM = new GtEfprpm
+                        {
+                            BusinessKey = obj_PR.BusinessKey,
+                            VoucherKey = obj_PR.VoucherKey,
+                            PaymentMode = obj.PaymentMode,
+                            CardType = obj.CardType,
+                            CardNumber = obj.CardNumber,
+                            CardExpiryDate = obj.CardExpiryDate,
+                            ApprovalNumber = obj.ApprovalNumber,
+                            ReferenceNumber = obj.ReferenceNumber,
+                            MpreferenceNumber = obj.MPReferenceNumber,
+                            MpreferenceDate = obj.MPReferenceDate,
+                            ChequeNumber = obj.ChequeNumber,
+                            ChequeDate = obj.ChequeDate,
+                            DraweeBank = obj.DraweeBank,
+
+                            ActiveStatus = true,
+                            CreatedBy = 0,
+                            CreatedOn = DateTime.Now,
+                            CreatedTerminal = System.Environment.MachineName
+                        };
+                        db.GtEfprpm.Add(gt_PM);
+
+                        var ah = await db.GtGptbkh.Where(w => w.BookingKey == obj.BillDocumentKey).FirstOrDefaultAsync();
+                        if (obj.VoucherType == "R")
+                            if (ah != null)
+                            {
+                                ah.PaymentReceived = true;
+                            }
+
+                        await db.SaveChangesAsync();
+                        dbContext.Commit();
+
+                        return new DO_ReturnParameter { Status = true };
+
+                    }
+                    catch (DbUpdateException ex)
+                    {
+                        dbContext.Rollback();
+                        throw;
+                    }
+                    catch (Exception ex)
+                    {
+                        dbContext.Rollback();
+                        throw;
+                    }
+                }
+            }
+
+        }
+
+        public async Task<List<DO_GuestPaymentReceiptDetails>> GetGuestPaymentReceiptDetails(int businessKey, long bookingKey)
+        {
+            using (var db = new eSyaEnterprise())
+            {
+                var gp = await db.GtEfprdt
+                    .Join(db.GtEfprpm,
+                        p => new { p.BusinessKey, p.VoucherKey },
+                        m => new { m.BusinessKey, m.VoucherKey },
+                        (p, m) => new { p, m })
+                    .Where(w=>w.p.BusinessKey == businessKey && w.p.BillDocumentKey == bookingKey)
+                    .Select(r => new DO_GuestPaymentReceiptDetails
+                    {
+                        VoucherType = r.p.VoucherType,
+                        VoucherTypeDesc = r.p.VoucherType == "R" ? "Receipt":"Payment",
+                        PaymentModeDesc = db.GtEcapcd.Where(w=>w.ApplicationCode == r.m.PaymentMode).FirstOrDefault().CodeDesc,
+                        VoucherKey = r.p.VoucherKey,
+                        VoucherDate = r.p.VoucherDate,
+                        VoucherAmount = r.p.VoucherAmount
+                    }).ToListAsync();
+
+                return gp;
+            }
+        }
+    }
+}

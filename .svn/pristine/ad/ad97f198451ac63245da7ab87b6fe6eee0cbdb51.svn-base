@@ -1,0 +1,92 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+using eSyaNatureCure.DO;
+using eSyaNatureCure.IF;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
+
+namespace eSyaNatureCure.WebAPI.Controllers
+{
+    [Route("api/[controller]/[action]")]
+    [ApiController]
+    public class RoomReservationController : ControllerBase
+    {
+        private readonly IRoomReservationRepository _roomReservationRepository;
+
+        public RoomReservationController(IRoomReservationRepository roomReservationRepository)
+        {
+            _roomReservationRepository = roomReservationRepository;
+        }
+        #region Room Reservation
+        /// <summary>
+        /// Getting   Room Reservation by Business Key.
+        /// UI Reffered - Room Reservation
+        /// </summary>
+        [HttpGet]
+        public async Task<IActionResult> GetRoomReservationsbyBusinesskey(int businesskey)
+        {
+            var _rs = await _roomReservationRepository.GetRoomReservationsbyBusinesskey(businesskey);
+            return Ok(_rs);
+        }
+
+        /// <summary>
+        /// Insert  Room Reservation.
+        /// UI Reffered -Room Reservation
+        /// </summary>
+        [HttpPost]
+        public async Task<IActionResult> InsertIntoRoomReservation(DO_RoomReservation obj)
+        {
+            var msg = await _roomReservationRepository.InsertIntoRoomReservation(obj);
+            return Ok(msg);
+
+        }
+        /// <summary>
+        /// Update Room Reservation.
+        /// UI Reffered -Room Reservation
+        /// </summary>
+        [HttpPost]
+        public async Task<IActionResult> UpdateRoomReservation(DO_RoomReservation obj)
+        {
+            var msg = await _roomReservationRepository.UpdateRoomReservation(obj);
+            return Ok(msg);
+
+        }
+        /// <summary>
+        /// Active/De Active Room Reservation.
+        /// UI Reffered -Room Reservation
+        /// Params status-Room Reservation
+        /// </summary>
+        [HttpPost]
+        public async Task<IActionResult> ActiveOrDeActiveRoomReservation(DO_RoomReservation robj)
+        {
+            var msg = await _roomReservationRepository.ActiveOrDeActiveRoomReservation(robj);
+            return Ok(msg);
+
+        }
+
+        /// <summary>
+        /// Getting   Room Numbers for drop down.
+        /// UI Reffered - Room Reservation
+        /// </summary>
+        [HttpGet]
+        public async Task<IActionResult> GetActiveRoomNumbersbyRoomType(int roomtype)
+        {
+            var _rnos = await _roomReservationRepository.GetActiveRoomNumbersbyRoomType(roomtype);
+            return Ok(_rnos);
+        }
+
+        /// <summary>
+        /// Getting   Bed Numbers for drop down.
+        /// UI Reffered - Room Reservation
+        /// </summary>
+        [HttpGet]
+        public async Task<IActionResult> GetActiveBedNumbersbyRoomNumber(int roomtype, string roomnumber)
+        {
+            var _bnos = await _roomReservationRepository.GetActiveBedNumbersbyRoomNumber(roomtype, roomnumber);
+            return Ok(_bnos);
+        }
+        #endregion  
+    }
+}

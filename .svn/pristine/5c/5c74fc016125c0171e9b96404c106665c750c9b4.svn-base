@@ -1,0 +1,98 @@
+﻿using eSyaNatureCure.DL.Entities;
+using eSyaNatureCure.DO;
+using eSyaNatureCure.IF;
+using Microsoft.EntityFrameworkCore;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace eSyaNatureCure.DL.Repository
+{
+    public class FrontOfficeRepository : IFrontOfficeRepository
+    {
+        public async Task<DO_FrontOffice> GetTodayDashboard(int businessKey)
+        {
+            using (var db = new eSyaEnterprise())
+            {
+                try
+                {
+                    var ds = await db.GtGptbkh
+                    .Join(db.GtGptbkg,
+                      h => h.BookingKey,
+                      g => g.BookingKey,
+                      (h, g) => new { h, g })
+                      .Join(db.GtGptbkp,
+                      hg => new { hg.h.BookingKey, hg.g.GuestId },
+                      p => new { p.BookingKey, p.GuestId },
+                      (hg, p) => new { hg, p })
+                      .Where(w => w.hg.h.BusinessKey == businessKey)
+                      .AsNoTracking()
+                      .Select(
+                        l => new DO_BookinDetails
+                        {
+                            BusinessKey = l.hg.h.BusinessKey,
+                            BookingKey = l.hg.h.BookingKey,
+                            BookingDate = l.hg.h.BookingDate,
+                            CheckInDate = l.hg.h.CheckInDate,
+                            CheckOutDate = l.hg.h.CheckOutDate,
+                            BookingStatus = l.hg.h.BookingStatus,
+                            FirstName = l.hg.g.FirstName,
+                            LastName = l.hg.g.LastName,
+                            GuestName = l.hg.g.FirstName + " " + l.hg.g.LastName,
+                            Gender = l.hg.g.Gender,
+                            MobileNumber = l.hg.g.MobileNumber,
+                            EmailId = l.hg.g.EmailId,
+                            Uhid = l.hg.g.Uhid,
+                            GuestId = l.hg.g.GuestId,
+                            IsCheckedIn= l.hg.g.IsCheckedIn,
+                            ActualCheckedInDate= l.hg.g.ActualCheckedInDate,
+                            IsCheckedOut= l.hg.g.IsCheckedOut,
+                            ActualCheckedOutDate= l.hg.g.ActualCheckedOutDate,
+                            RoomTypeId = l.p.RoomTypeId,
+                            RoomTypeDesc=db.GtGprmty.Where(w=> w.RoomTypeId==l.p.RoomTypeId).Select(s=> s.RoomTypeDesc).FirstOrDefault(),
+                            RoomNumber =l.p.RoomNumber,
+                            BedNumber=l.p.BedNumber,
+                            OccupancyType=l.p.OccupancyType,
+                            NoOfWeeks=l.p.NoOfWeeks
+                            }
+                            ).ToListAsync();
+
+                    var dashboard = new DO_FrontOffice();
+                    dashboard.Checkin_List = ds.FindAll(w => w.CheckInDate == System.DateTime.Now.Date && !w.IsCheckedIn);
+                    dashboard.Checkin_Count = dashboard.Checkin_List.Count;
+                    dashboard.Checkout_List = ds.FindAll(w => w.CheckOutDate == System.DateTime.Now.Date && !w.IsCheckedOut);
+                    dashboard.Checkout_Count = dashboard.Checkout_List.Count;
+                    dashboard.Occupancy_List = ds.FindAll(w => w.IsCheckedIn && !w.IsCheckedOut);
+                    dashboard.Occupancy_Count = dashboard.Occupancy_List.Count;
+
+                    var occ_rooms = dashboard.Occupancy_List.Select(s => s.RoomNumber).Distinct().ToList().Count;
+                    var total_rooms = db.GtGprmbm.Select(s => s.RoomNumber).Distinct().ToList().Count();
+                    if (total_rooms != 0)
+                    {
+                        dashboard.Occupancy_Percent = (occ_rooms * 100) / total_rooms;
+                    }
+                    else
+                    {
+                        dashboard.Occupancy_Percent = 0;
+                    }
+                    
+
+
+                    return dashboard;
+                  
+
+                }
+                catch (Exception ex)
+                {
+                    throw ex;
+                }
+            }
+            
+        }
+        
+  
+
+    }
+}

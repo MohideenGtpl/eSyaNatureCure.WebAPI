@@ -1,0 +1,83 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+using eSyaNatureCure.DO;
+using eSyaNatureCure.IF;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
+
+namespace eSyaNatureCure.WebAPI.Controllers
+{
+    [Route("api/[controller]/[action]")]
+    [ApiController]
+    public class MembershipRegistrationController : ControllerBase
+    {
+        private readonly IMembershipRegistrationRepository _membershipRegistrationRepository;
+
+        public MembershipRegistrationController(IMembershipRegistrationRepository membershipRegistrationRepository)
+        {
+            _membershipRegistrationRepository = membershipRegistrationRepository;
+
+        }
+        #region Member Ship Registration
+        /// <summary>
+        /// Getting  All  Member Ships.
+        /// UI Reffered -  Member Ship Registration
+        /// </summary>
+        [HttpGet]
+        public async Task<IActionResult> GetMembershipByNamePrefix(string memberNamePrefix)
+        {
+            var _mships = await _membershipRegistrationRepository.GetMembershipByNamePrefix(memberNamePrefix);
+            return Ok(_mships);
+        }
+
+        /// <summary>
+        /// Getting Get Membership.
+        /// UI Reffered - businesskey-memberId-couponId
+        /// </summary>
+        [HttpGet]
+        public async Task<IActionResult> GetMembershipByMemberId(int businesskey, int memberId, string couponId)
+        {
+            var _mship = await _membershipRegistrationRepository.GetMembershipByMemberId(businesskey, memberId,couponId);
+            return Ok(_mship);
+        }
+
+        /// <summary>
+        /// Insert   Member Ship.
+        /// UI Reffered - Member Ship Registration
+        /// </summary>
+        [HttpPost]
+        public async Task<IActionResult> InsertIntoMembership(DO_MembershipRegistration obj)
+        {
+            var msg = await _membershipRegistrationRepository.InsertIntoMembership(obj);
+            return Ok(msg);
+
+        }
+
+        /// <summary>
+        /// Update   Member Ship.
+        /// UI Reffered - Member Ship Registration
+        /// </summary>
+        [HttpPost]
+        public async Task<IActionResult> UpdateActivities(DO_MembershipRegistration obj)
+        {
+            var msg = await _membershipRegistrationRepository.UpdateMembership(obj);
+            return Ok(msg);
+
+        }
+        /// <summary>
+        /// Active/De Active  Member Ship.
+        /// UI Reffered - Member Ship Registration
+        /// Params status-businesskey-memberId-couponId
+        /// </summary>
+        [HttpGet]
+        public async Task<IActionResult> ActiveOrDeActiveMembership(bool status, int businesskey, long memberId, string couponId)
+        {
+            var msg = await _membershipRegistrationRepository.ActiveOrDeActiveMembership(status, businesskey, memberId, couponId);
+            return Ok(msg);
+
+        }
+        #endregion  Member Ship Registration
+    }
+}

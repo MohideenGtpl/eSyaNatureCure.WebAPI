@@ -1,0 +1,336 @@
+﻿using eSyaNatureCure.DL.Entities;
+using eSyaNatureCure.DO;
+using eSyaNatureCure.IF;
+using Microsoft.EntityFrameworkCore;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace eSyaNatureCure.DL.Repository
+{
+   public class MembershipRegistrationRepository: IMembershipRegistrationRepository
+    {
+        public async Task<List<DO_MembershipRegistration>> GetMembershipByNamePrefix(string memberNamePrefix)
+        {
+            try
+            {
+                using (var db = new eSyaEnterprise())
+                {
+                    var ds = db.GtGptrgh
+                        .Where(w => (!String.IsNullOrEmpty(memberNamePrefix) && (memberNamePrefix != "All"))
+                        ? w.FirstName.ToUpper().Trim().StartsWith(memberNamePrefix.ToUpper().Trim()) : true)
+                        .Join(db.GtGptrgc,
+                         x => new { x.BusinessKey,x.MemberId },
+                         y => new { y.BusinessKey,y.MemberId },
+                        (x, y) => new { x, y })
+                        .Select(r => new DO_MembershipRegistration
+                        {
+                           BusinessKey=r.x.BusinessKey,
+                           MemberId=r.x.MemberId,
+                           MembershipType=r.x.MembershipType,
+                           RegisteredDate=r.x.RegisteredDate,
+                           FirstName=r.x.FirstName,
+                           MiddleName=r.x.MiddleName,
+                           LastName=r.x.LastName,
+                           Gender=r.x.Gender,
+                           AgeYy=r.x.AgeYy,
+                           Isdcode=r.x.Isdcode,
+                           MobileNumber=r.x.MobileNumber,
+                           EmailId=r.x.EmailId,
+                           CityCode=r.x.CityCode,
+                           StateCode=r.x.StateCode,
+                           Uhid=r.x.Uhid,
+                           DonationAmount=r.x.DonationAmount,
+                           ActiveStatus = r.x.ActiveStatus,
+                           CouponId =r.y.CouponId,
+                           NoOfYear=r.y.NoOfYear,
+                           ValidFrom=r.y.ValidFrom,
+                           ValidTill=r.y.ValidTill,
+                           RoomType=r.y.RoomType,
+                           BookingDiscountPercentage=r.y.BookingDiscountPercentage,
+                           NoOfPersons=r.y.NoOfPersons,
+                           PatientType=r.y.PatientType,
+                           PatientCategory=r.y.PatientCategory
+                        }).OrderBy(o => o.FirstName).ToListAsync();
+
+                    return await ds;
+                }
+            }
+            catch (Exception ex)
+            {
+                throw ex;
+            }
+        }
+
+        public async Task<DO_MembershipRegistration> GetMembershipByMemberId(int businesskey,int memberId,string couponId)
+        {
+            try
+            {
+                using (var db = new eSyaEnterprise())
+                {
+                    var ds = db.GtGptrgh.Where(w => w.BusinessKey == businesskey && w.MemberId == memberId)
+                        .Join(db.GtGptrgc.Where(w => w.BusinessKey == businesskey && w.MemberId == memberId && w.CouponId.ToUpper().Replace(" ", "")==couponId.ToUpper().Replace(" ", "")),
+                         x => new { x.BusinessKey, x.MemberId },
+                         y => new { y.BusinessKey, y.MemberId },
+                        (x, y) => new { x, y })
+                        .Select(r => new DO_MembershipRegistration
+                        {
+                            BusinessKey = r.x.BusinessKey,
+                            MemberId = r.x.MemberId,
+                            MembershipType = r.x.MembershipType,
+                            RegisteredDate = r.x.RegisteredDate,
+                            FirstName = r.x.FirstName,
+                            MiddleName = r.x.MiddleName,
+                            LastName = r.x.LastName,
+                            Gender = r.x.Gender,
+                            AgeYy = r.x.AgeYy,
+                            Isdcode = r.x.Isdcode,
+                            MobileNumber = r.x.MobileNumber,
+                            EmailId = r.x.EmailId,
+                            CityCode = r.x.CityCode,
+                            StateCode = r.x.StateCode,
+                            Uhid = r.x.Uhid,
+                            DonationAmount = r.x.DonationAmount,
+                            ActiveStatus = r.x.ActiveStatus,
+                            CouponId = r.y.CouponId,
+                            NoOfYear = r.y.NoOfYear,
+                            ValidFrom = r.y.ValidFrom,
+                            ValidTill = r.y.ValidTill,
+                            RoomType = r.y.RoomType,
+                            BookingDiscountPercentage = r.y.BookingDiscountPercentage,
+                            NoOfPersons = r.y.NoOfPersons,
+                            PatientType = r.y.PatientType,
+                            PatientCategory = r.y.PatientCategory
+                        }).FirstOrDefaultAsync();
+
+                    return await ds;
+                }
+            }
+            catch (Exception ex)
+            {
+                throw ex;
+            }
+        }
+
+        public async Task<DO_ReturnParameter> InsertIntoMembership(DO_MembershipRegistration obj)
+        {
+            using (var db = new eSyaEnterprise())
+            {
+                using (var dbContext = db.Database.BeginTransaction())
+                {
+                    try
+                    {
+                        var c_year = DateTime.Now.Year.ToString();
+                        var c_month = DateTime.Now.Month.ToString();
+                        var c_res = c_year.Substring(c_year.Length - 2);
+                        var memId = c_res + c_month;
+                        var Exists_maxval = db.GtGptrgh.Select(a => a.MemberId).DefaultIfEmpty().Max().ToString();
+                        var Exists_absval= Exists_maxval.Substring(4);
+                        if (Exists_absval == "0")
+                        {
+                            memId = memId + "000001";
+                        }
+                        else
+                        {
+                            memId = memId + Exists_absval + 1;
+                        }
+                        obj.MemberId =Convert.ToInt64(memId);
+                        var mh_Exists =await db.GtGptrgh.Where(x => x.BusinessKey == obj.BusinessKey && x.MemberId == obj.MemberId).FirstOrDefaultAsync();
+                        if (mh_Exists != null)
+                        {
+                            return new DO_ReturnParameter() { Status = false, Message = "Member Ship already Exists" };
+                        }
+                         GtGptrgh mh = new GtGptrgh
+                        {
+                            BusinessKey = obj.BusinessKey,
+                            MemberId = obj.MemberId,
+                            MembershipType = obj.MembershipType,
+                            RegisteredDate = System.DateTime.Now.Date,
+                            FirstName = obj.FirstName,
+                            MiddleName = obj.MiddleName,
+                            LastName = obj.LastName,
+                            Gender = obj.Gender,
+                            AgeYy = obj.AgeYy,
+                            Isdcode = obj.Isdcode,
+                            MobileNumber = obj.MobileNumber,
+                            EmailId = obj.EmailId,
+                            CityCode = obj.CityCode,
+                            StateCode = obj.StateCode,
+                            Uhid = obj.Uhid,
+                            DonationAmount = obj.DonationAmount,
+                            ActiveStatus = obj.ActiveStatus,
+                            FormId = obj.FormId,
+                            CreatedBy = obj.UserID,
+                            CreatedOn = System.DateTime.Now,
+                            CreatedTerminal = obj.TerminalID
+                        };
+                        db.GtGptrgh.Add(mh);
+                        await db.SaveChangesAsync();
+                        var mc_Exists = await db.GtGptrgc.Where(x => x.BusinessKey == obj.BusinessKey && x.MemberId == obj.MemberId && x.CouponId.ToUpper().Replace(" ", "") == obj.CouponId.ToUpper().Replace(" ", "")).FirstOrDefaultAsync();
+                        if (mc_Exists != null)
+                        {
+                            return new DO_ReturnParameter() { Status = false, Message = "Member Ship coupon already Exists" };
+                        }
+                        GtGptrgc mc = new GtGptrgc
+                        {
+                            BusinessKey = obj.BusinessKey,
+                            MemberId = obj.MemberId,
+                            CouponId = obj.CouponId,
+                            NoOfYear = obj.NoOfYear,
+                            ValidFrom = obj.ValidFrom,
+                            ValidTill = obj.ValidTill,
+                            RoomType = obj.RoomType,
+                            BookingDiscountPercentage = obj.BookingDiscountPercentage,
+                            NoOfPersons = obj.NoOfPersons,
+                            PatientType=obj.PatientType,
+                            PatientCategory=obj.PatientCategory,
+                            ActiveStatus = obj.ActiveStatus,
+                            FormId = obj.FormId,
+                            CreatedBy = obj.UserID,
+                            CreatedOn = System.DateTime.Now,
+                            CreatedTerminal = obj.TerminalID
+                        };
+                        db.GtGptrgc.Add(mc);
+                        await db.SaveChangesAsync();
+                        dbContext.Commit();
+                        return new DO_ReturnParameter() { Status = true, Message = "Member Ship Register Successfully" };
+                    }
+                    catch (DbUpdateException ex)
+                    {
+                        dbContext.Rollback();
+                        throw new Exception(CommonMethod.GetValidationMessageFromException(ex));
+                    }
+                    catch (Exception ex)
+                    {
+                        dbContext.Rollback();
+                        throw ex;
+                    }
+                }
+            }
+        }
+
+        public async Task<DO_ReturnParameter> UpdateMembership(DO_MembershipRegistration obj)
+        {
+            using (eSyaEnterprise db = new eSyaEnterprise())
+            {
+                using (var dbContext = db.Database.BeginTransaction())
+                {
+
+                    try
+                    {
+                        GtGptrgh mh = await db.GtGptrgh.Where(x => x.BusinessKey == obj.BusinessKey && x.MemberId == obj.MemberId).FirstOrDefaultAsync();
+                        var mc = await db.GtGptrgc.Where(x => x.BusinessKey == obj.BusinessKey && x.MemberId == obj.MemberId && x.CouponId.ToUpper().Replace(" ", "") == obj.CouponId.ToUpper().Replace(" ", "")).FirstOrDefaultAsync();
+                        if (mc == null)
+                        {
+                            return new DO_ReturnParameter() { Status = false, Message = "Member Ship coupon not Exists" };
+                        }
+                        if (mh != null && mc!=null)
+                        {
+                            //Member ship Header
+                            mh.MembershipType = obj.MembershipType;
+                            mh.RegisteredDate = obj.RegisteredDate;
+                            mh.FirstName = obj.FirstName;
+                            mh.MiddleName = obj.MiddleName;
+                            mh.LastName = obj.LastName;
+                            mh.Gender = obj.Gender;
+                            mh.AgeYy = obj.AgeYy;
+                            mh.Isdcode = obj.Isdcode;
+                            mh.MobileNumber = obj.MobileNumber;
+                            mh.EmailId = obj.EmailId;
+                            mh.CityCode = obj.CityCode;
+                            mh.StateCode = obj.StateCode;
+                            mh.Uhid = obj.Uhid;
+                            mh.DonationAmount = obj.DonationAmount;
+                            mh.ActiveStatus = obj.ActiveStatus;
+                            mh.ModifiedBy = obj.UserID;
+                            mh.ModifiedOn = DateTime.Now;
+                            mh.ModifiedTerminal = obj.TerminalID;
+                           //Member ship details
+                            mc.NoOfYear = obj.NoOfYear;
+                            mc.ValidFrom = obj.ValidFrom;
+                            mc.ValidTill = obj.ValidTill;
+                            mc.RoomType = obj.RoomType;
+                            mc.BookingDiscountPercentage = obj.BookingDiscountPercentage;
+                            mc.NoOfPersons = obj.NoOfPersons;
+                            mc.PatientType = obj.PatientType;
+                            mc.PatientCategory = obj.PatientCategory;
+                            mc.ActiveStatus = obj.ActiveStatus;
+                            mc.ModifiedBy = obj.UserID;
+                            mc.ModifiedOn = DateTime.Now;
+                            mc.ModifiedTerminal = obj.TerminalID;
+
+                            await db.SaveChangesAsync();
+                            dbContext.Commit();
+                            return new DO_ReturnParameter() { Status = true, Message = "Member Ship Updated sucessfully." };
+                           
+                        }
+                        else
+                        {
+                            return new DO_ReturnParameter() { Status = false, Message = "Couldn't find Member Ship header" };
+                        }
+
+                    }
+                    catch (DbUpdateException ex)
+                    {
+                        dbContext.Rollback();
+                        throw new Exception(CommonMethod.GetValidationMessageFromException(ex));
+                    }
+                    catch (Exception ex)
+                    {
+                        dbContext.Rollback();
+                        throw ex;
+                    }
+                }
+            }
+        }
+
+        public async Task<DO_ReturnParameter> ActiveOrDeActiveMembership(bool status, int businesskey,long memberId,string couponId)
+        {
+            using (var db = new eSyaEnterprise())
+            {
+                using (var dbContext = db.Database.BeginTransaction())
+                {
+                    try
+                    {
+                        GtGptrgh mh = db.GtGptrgh.Where(p => p.BusinessKey == businesskey && p.MemberId==memberId).FirstOrDefault();
+                        if (mh == null)
+                        {
+                            return new DO_ReturnParameter() { Status = false, Message = "Member Ship header is not exist" };
+                        }
+                        GtGptrgc mc=  db.GtGptrgc.Where(p => p.BusinessKey == businesskey && p.MemberId == memberId && p.CouponId.ToUpper().Replace(" ", "") == couponId.ToUpper().Replace(" ", "")).FirstOrDefault();
+                        if (mc == null)
+                        {
+                            return new DO_ReturnParameter() { Status = false, Message = "Member Ship Coupon is not exist" };
+                        }
+                        if (mh != null && mc != null)
+                        {
+                            mh.ActiveStatus = status;
+                            mc.ActiveStatus = status;
+                            await db.SaveChangesAsync();
+                            dbContext.Commit();
+                        }
+                       
+
+                        if (status == true)
+                            return new DO_ReturnParameter() { Status = true, Message = "Member Ship  Activated Successfully." };
+                        else
+                            return new DO_ReturnParameter() { Status = true, Message = "Member Ship  De Activated Successfully." };
+                    }
+                    catch (DbUpdateException ex)
+                    {
+                        dbContext.Rollback();
+                        throw new Exception(CommonMethod.GetValidationMessageFromException(ex));
+
+                    }
+                    catch (Exception ex)
+                    {
+                        dbContext.Rollback();
+                        throw ex;
+                    }
+                }
+            }
+        }
+    }
+}

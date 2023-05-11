@@ -1,0 +1,52 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+using eSyaNatureCure.DO;
+using eSyaNatureCure.IF;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
+
+namespace eSyaNatureCure.WebAPI.Controllers
+{
+    [Route("api/[controller]/[action]")]
+    [ApiController]
+    public class GuestBookingController : ControllerBase
+    {
+        private readonly IGuestBookingRepository _guestBookingRepository;
+
+        public GuestBookingController(IGuestBookingRepository guestBookingRepository)
+        {
+            _guestBookingRepository = guestBookingRepository;
+
+        }
+
+        /// <summary>
+        /// Getting  Guest Booking by Serach Creteria.
+        /// UI Reffered - Guest Booking
+        /// </summary>
+        [HttpPost]
+        public  IActionResult GetGuestBookingBySearchCreteria(Do_GuestBookingSearchCretria obj)
+        {
+            var bookings =  _guestBookingRepository.GetGuestBookingBySearchCreteria(obj.BusinessKey, obj.RoomTypeId ,
+
+               obj.RoomTypeNumber ,obj.BedNumber ,obj.OccupancyType ,obj.Gender ,obj.BookingFromDate ,obj.BookingToDate ,obj.CheckInDate ,obj.CheckOutDate, obj.isOnCheckInOutDate);
+
+            return Ok(bookings);
+        }
+
+        /// <summary>
+        /// Getting  Guest Booking For Payment Failed Details
+        /// UI Reffered - Guest Booking
+        /// </summary>
+        [HttpPost]
+        public IActionResult GetGuestBookingPaymentFailedDetails(Do_GuestBookingSearchCretria obj)
+        {
+            var bookings = _guestBookingRepository.GetGuestBookingPaymentFailedDetails(obj.BusinessKey, obj.RoomTypeId,
+               obj.RoomTypeNumber, obj.BedNumber, obj.OccupancyType, obj.Gender, obj.BookingFromDate, obj.BookingToDate, obj.CheckInDate, obj.CheckOutDate, obj.isOnCheckInOutDate);
+
+            return Ok(bookings);
+        }
+
+    }
+}

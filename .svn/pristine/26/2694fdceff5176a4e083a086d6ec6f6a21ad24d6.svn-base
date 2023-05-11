@@ -1,0 +1,19 @@
+﻿using eSyaNatureCure.DO;
+using System;
+using System.Collections.Generic;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace eSyaNatureCure.IF
+{
+    public interface IBedMasterRepository
+    {
+        Task<List<DO_BedMaster>> GetAllBedMastersbyRoomType(int roomtype);
+
+        Task<DO_ReturnParameter> InsertBedmaster(DO_BedMaster obj);
+
+        Task<DO_ReturnParameter> UpdateBedmaster(DO_BedMaster obj);
+
+        Task<DO_ReturnParameter> ActiveOrDeActiveBedMaster(DO_BedMaster obj);
+    }
+}

@@ -1,0 +1,44 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+using eSyaNatureCure.DO;
+using eSyaNatureCure.IF;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
+
+namespace eSyaNatureCure.WebAPI.Controllers
+{
+    [Route("api/[controller]/[action]")]
+    [ApiController]
+    public class GuestCheckInController : ControllerBase
+    {
+        private readonly IGuestCheckInRepository _guestCheckInRepository;
+
+        public GuestCheckInController(IGuestCheckInRepository guestCheckInRepository)
+        {
+            _guestCheckInRepository = guestCheckInRepository;
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> GetGuestDetailById(int businessKey, long bookingKey, int guestId)
+        {
+            var gd = await _guestCheckInRepository.GetGuestDetailById(businessKey, bookingKey, guestId);
+            return Ok(gd);
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> GetGuestDetailsByBookingKey(int businessKey, long bookingKey)
+        {
+            var gd = await _guestCheckInRepository.GetGuestDetailsByBookingKey(businessKey, bookingKey);
+            return Ok(gd);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> CreateGuestCheckin(DO_GuestCheckInDetails obj)
+        {
+            var gd = await _guestCheckInRepository.CreateGuestCheckin(obj);
+            return Ok(gd);
+        }
+    }
+}

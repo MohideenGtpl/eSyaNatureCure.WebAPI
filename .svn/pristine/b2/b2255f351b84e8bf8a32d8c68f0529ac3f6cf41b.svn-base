@@ -1,0 +1,222 @@
+﻿using eSyaNatureCure.DL.Entities;
+using eSyaNatureCure.DO;
+using eSyaNatureCure.IF;
+using Microsoft.EntityFrameworkCore;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace eSyaNatureCure.DL.Repository
+{
+   public class PackagePriceRepository: IPackagePriceRepository
+    {
+        #region Package Price
+
+        public async Task<List<DO_PackagePrice>> GetAllPackagePricesbyPackageId(int packageId)
+        {
+            using (var db = new eSyaEnterprise())
+            {
+                try
+                {
+                    if (packageId == 0)
+                    {
+                        var result = db.GtGppkpr.Join(db.GtGppkms, lkey => new { lkey.PackageId },
+                            ent => new { ent.PackageId },
+                            (lkey, ent) => new { lkey, ent }).Join(db.GtGprmty,
+                            Bloc => new { Bloc.lkey.RoomTypeId },
+                            seg => new { seg.RoomTypeId },
+                            (Bloc, seg) => new { Bloc, seg })
+                            .Select(c => new DO_PackagePrice
+                            {
+                                PackageId =c.Bloc.lkey.PackageId,
+                                RoomTypeId = c.Bloc.lkey.RoomTypeId,
+                                OccupancyType = c.Bloc.lkey.OccupancyType,
+                                Price = c.Bloc.lkey.Price,
+                                NoOfWeeks = c.Bloc.lkey.NoOfWeeks,
+                                ActiveStatus = c.Bloc.lkey.ActiveStatus,
+                                RoomTypeDesc=c.seg.RoomTypeDesc,
+                                PackageDesc=c.Bloc.ent.PackageDesc
+                               
+                            }).ToListAsync();
+                        return await result;
+                    }
+
+                    else
+                    {
+
+                        var result = db.GtGppkpr.Where(x=>x.PackageId==packageId).Join(db.GtGppkms, lkey => new { lkey.PackageId },
+                            ent => new { ent.PackageId },
+                            (lkey, ent) => new { lkey, ent }).Join(db.GtGprmty,
+                            Bloc => new { Bloc.lkey.RoomTypeId },
+                            seg => new { seg.RoomTypeId },
+                            (Bloc, seg) => new { Bloc, seg })
+                            .Select(c => new DO_PackagePrice
+                            {
+                                PackageId = c.Bloc.lkey.PackageId,
+                                RoomTypeId = c.Bloc.lkey.RoomTypeId,
+                                OccupancyType = c.Bloc.lkey.OccupancyType,
+                                Price = c.Bloc.lkey.Price,
+                                NoOfWeeks = c.Bloc.lkey.NoOfWeeks,
+                                ActiveStatus = c.Bloc.lkey.ActiveStatus,
+                                RoomTypeDesc = c.seg.RoomTypeDesc,
+                                PackageDesc = c.Bloc.ent.PackageDesc
+
+                            }).ToListAsync();
+                        return await result;
+                    }
+
+                }
+                catch (Exception ex)
+                {
+                    throw ex;
+                }
+            }
+        }
+
+        public async Task<DO_ReturnParameter> InsertPackagePrice(DO_PackagePrice obj)
+        {
+            using (eSyaEnterprise db = new eSyaEnterprise())
+            {
+                using (var dbContext = db.Database.BeginTransaction())
+                {
+                    try
+                    {
+
+                        GtGppkpr is_pkgpriceExists = db.GtGppkpr.FirstOrDefault(b => b.RoomTypeId == obj.RoomTypeId && b.OccupancyType.ToUpper().Replace(" ", "") == obj.OccupancyType.ToUpper().Replace(" ", "")
+                        && b.PackageId == obj.PackageId);
+                        if (is_pkgpriceExists == null)
+                        {
+
+                            var pkgprice = new GtGppkpr
+                            {
+                                RoomTypeId = obj.RoomTypeId,
+                                PackageId = obj.PackageId,
+                                OccupancyType = obj.OccupancyType,
+                                Price = obj.Price,
+                                NoOfWeeks = obj.NoOfWeeks,
+                                ActiveStatus = obj.ActiveStatus,
+                                FormId = obj.FormId,
+                                CreatedBy = obj.UserID,
+                                CreatedOn = DateTime.Now,
+                                CreatedTerminal = obj.TerminalID
+                            };
+
+                            db.GtGppkpr.Add(pkgprice);
+                            await db.SaveChangesAsync();
+                            dbContext.Commit();
+                            return new DO_ReturnParameter() { Status = true, Message = "Package Price Created Successfully" };
+
+                        }
+                        else
+                        {
+                            return new DO_ReturnParameter() { Status = false, Message = "Package Price already already Exists try another one." };
+                        }
+                    }
+                    catch (DbUpdateException ex)
+                    {
+                        dbContext.Rollback();
+                        throw new Exception(CommonMethod.GetValidationMessageFromException(ex));
+                    }
+                    catch (Exception ex)
+                    {
+                        dbContext.Rollback();
+                        throw ex;
+                    }
+                }
+            }
+        }
+
+        public async Task<DO_ReturnParameter> UpdatePackagePrice(DO_PackagePrice obj)
+        {
+            using (eSyaEnterprise db = new eSyaEnterprise())
+            {
+                using (var dbContext = db.Database.BeginTransaction())
+                {
+
+                    try
+                    {
+                        GtGppkpr pkgprice = db.GtGppkpr.FirstOrDefault(b => b.RoomTypeId == obj.RoomTypeId && b.OccupancyType.ToUpper().Replace(" ", "") == obj.OccupancyType.ToUpper().Replace(" ", "")
+                        && b.PackageId == obj.PackageId);
+
+                        if (pkgprice != null)
+                        {
+
+                            pkgprice.RoomTypeId = obj.RoomTypeId;
+                            pkgprice.PackageId = obj.PackageId;
+                            pkgprice.OccupancyType = obj.OccupancyType;
+                            pkgprice.Price = obj.Price;
+                            pkgprice.NoOfWeeks = obj.NoOfWeeks;
+                            pkgprice.ActiveStatus = obj.ActiveStatus;
+                            pkgprice.ModifiedBy = obj.UserID;
+                            pkgprice.ModifiedOn = DateTime.Now;
+                            pkgprice.ModifiedTerminal = obj.TerminalID;
+                            await db.SaveChangesAsync();
+                            dbContext.Commit();
+                            return new DO_ReturnParameter() { Status = true, Message = "Package Price Updated sucessfully." };
+
+
+                        }
+                        else
+                        {
+                            return new DO_ReturnParameter() { Status = false, Message = "Couldn't find Package Price" };
+                        }
+
+                    }
+                    catch (DbUpdateException ex)
+                    {
+                        dbContext.Rollback();
+                        throw new Exception(CommonMethod.GetValidationMessageFromException(ex));
+                    }
+                    catch (Exception ex)
+                    {
+                        dbContext.Rollback();
+                        throw ex;
+                    }
+                }
+            }
+        }
+
+        public async Task<DO_ReturnParameter> ActiveOrDeActivePackagePrice(DO_PackagePrice obj)
+        {
+            using (var db = new eSyaEnterprise())
+            {
+                using (var dbContext = db.Database.BeginTransaction())
+                {
+                    try
+                    {
+                        GtGppkpr pkgprice = db.GtGppkpr.FirstOrDefault(b => b.RoomTypeId == obj.RoomTypeId && b.OccupancyType.ToUpper().Replace(" ", "") == obj.OccupancyType.ToUpper().Replace(" ", "")
+                                             && b.PackageId == obj.PackageId);
+                        if (pkgprice == null)
+                        {
+                            return new DO_ReturnParameter() { Status = false, Message = "Package Price  is not exist" };
+                        }
+
+                        pkgprice.ActiveStatus = obj.Status;
+                        await db.SaveChangesAsync();
+                        dbContext.Commit();
+
+                        if (obj.Status == true)
+                            return new DO_ReturnParameter() { Status = true, Message = "Package Price  Activated Successfully." };
+                        else
+                            return new DO_ReturnParameter() { Status = true, Message = "Package Price  De Activated Successfully." };
+                    }
+                    catch (DbUpdateException ex)
+                    {
+                        dbContext.Rollback();
+                        throw new Exception(CommonMethod.GetValidationMessageFromException(ex));
+
+                    }
+                    catch (Exception ex)
+                    {
+                        dbContext.Rollback();
+                        throw ex;
+                    }
+                }
+            }
+        }
+
+        #endregion Package Price
+    }
+}

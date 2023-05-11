@@ -1,0 +1,385 @@
+﻿using eSyaNatureCure.DL.Entities;
+using eSyaNatureCure.DO;
+using eSyaNatureCure.DO.StaticVariables;
+using eSyaNatureCure.IF;
+using Microsoft.EntityFrameworkCore;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace eSyaNatureCure.DL.Repository
+{
+    public class GuestCheckOutRepository : IGuestCheckOutRepository
+    {
+        public async Task<DO_ReturnParameter> CreateGuestBill(DO_PatientBillHeader obj)
+        {
+            using (var db = new eSyaEnterprise())
+            {
+                using (var dbContext = db.Database.BeginTransaction())
+                {
+                    try
+                    {
+
+                        if (db.GtGptbkh.Where(w => w.BookingKey == obj.BookingKey && w.BillDocumentKey != null).Count() > 0)
+                        {
+                            return new DO_ReturnParameter { Status = false, Message = "Bill has been generated for this booking id. Do not have permission to modify the bill." };
+                        }
+
+                        if (obj.UHID <= 0)
+                        {
+                            return new DO_ReturnParameter { Status = false, Message = "Guest has to be checked-in first." };
+                        }
+
+
+                        obj.FinancialYear = (int)db.GtEcclco.Where(w => System.DateTime.Now.Date >= w.FromDate.Date && System.DateTime.Now.Date <= w.TillDate.Date).First().FinancialYear;
+
+                        var dc_bl = await db.GtEcdcbn
+                          .Where(w => w.BusinessKey == obj.BusinessKey && w.FinancialYear == obj.FinancialYear
+                              && w.DocumentId == DocumentIdValues.guest_BillingId).FirstOrDefaultAsync();
+                        dc_bl.CurrentDocNumber = dc_bl.CurrentDocNumber + 1;
+                        obj.BillDocumentKey = long.Parse(obj.FinancialYear.ToString().Substring(2, 2) + obj.BusinessKey.ToString().PadLeft(2, '0') + dc_bl.CurrentDocNumber.ToString());
+
+                        GtEfpbhd bh = new GtEfpbhd
+                        {
+                            BusinessKey = obj.BusinessKey,
+                            FinancialYear = obj.FinancialYear,
+                            DocumentId = dc_bl.DocumentId,
+                            DocumentNumber = dc_bl.CurrentDocNumber,
+                            DocumentDate = System.DateTime.Now,
+                            BillType = "GBPH",
+                            BillDocumentKey = obj.BillDocumentKey,
+                            RUhid = obj.UHID,
+                            Opnumber = obj.OPNumber,
+                            PackageId = obj.PackageId,
+                            TransCurrencyCode = obj.TransCurrencyCode,
+                            LocalCurrencyCode = obj.LocalCurrencyCode,
+                            ExchangeRate = obj.ExchangeRate,
+                            ConcessionOn = obj.ConcessionOn,
+                            TotalBillAmount = obj.TotalBillAmount,
+                            TotalDiscountAmount = obj.TotalDiscountAmount,
+                            TotalConcessionAmount = obj.TotalConcessionAmount,
+                            RoundOff = obj.RoundOff,
+                            NetBillAmount = obj.NetBillAmount,
+                            DiscountPatient = 0,
+                            DiscountInsurance = 0,
+                            Narration = obj.Narration,
+                            IsFinancePosted = false,
+                            SmartCardSubmission = false,
+                            BillStatus = "O",
+                            PrintBillKey = obj.BillDocumentKey.ToString(),
+                            ActiveStatus = true,
+                            FormId = obj.FormID,
+                            CreatedBy = obj.UserID,
+                            CreatedOn = System.DateTime.Now,
+                            CreatedTerminal = obj.TerminalID
+                        };
+                        db.GtEfpbhd.Add(bh);
+
+                        short sNo = 1;
+                        foreach (var s in obj.l_PatientBillDetails)
+                        {
+                            GtEfpbdt bd = new GtEfpbdt
+                            {
+                                BusinessKey = bh.BusinessKey,
+                                BillDocumentKey = bh.BillDocumentKey,
+                                SerialNumber = sNo++,
+                                ServiceDate = System.DateTime.Now,
+                                ServiceType = 0,
+                                ServiceCode = (int)s.ServiceCode,
+                                DoctorCode = 0,
+                                Quantity = s.Quantity,
+                                Rate = s.Rate,
+                                DiscountAmount = s.DiscountAmount,
+                                ConcessionAmount = s.ConcessionAmount,
+                                TotalAmount = s.TotalAmount,
+                                PayableByPatient = s.PayableByPatient,
+                                PayableByInsurance = s.PayableByInsurance,
+                                ChargableToPatient = s.ChargableToPatient,
+                                ActiveStatus = true,
+                                FormId = obj.FormID,
+                                CreatedBy = obj.UserID,
+                                CreatedOn = System.DateTime.Now,
+                                CreatedTerminal = obj.TerminalID
+                            };
+                            db.GtEfpbdt.Add(bd);
+                        }
+
+                        var p_collectedAmount = db.GtEfprdt.Where(w => w.BillDocumentKey == obj.BookingKey && w.VoucherType == "R" && w.ActiveStatus).Sum(w => w.VoucherAmount);
+                        var p_RefundAmount = db.GtEfprdt.Where(w => w.BillDocumentKey == obj.BookingKey && w.VoucherType == "P" && w.ActiveStatus).Sum(w => w.VoucherAmount);
+
+                        GtEfpbps bs = new GtEfpbps
+                        {
+                            BusinessKey = obj.BusinessKey,
+                            BillDocumentKey = obj.BillDocumentKey,
+                            CollectedAmount = p_collectedAmount,
+                            AdvanceAmount = 0,
+                            DuesSettledAmount = 0,
+                            CancellationAmount = 0,
+                            RefundAmount = p_RefundAmount,
+                            SettlConcession = 0,
+                            PostSettlConcession = 0,
+                            ActiveStatus = true,
+                            FormId = obj.FormID,
+                            CreatedBy = obj.UserID,
+                            CreatedOn = System.DateTime.Now,
+                            CreatedTerminal = obj.TerminalID
+                        };
+                        db.GtEfpbps.Add(bs);
+
+                        GtEfpbsl sl_Patient = new GtEfpbsl
+                        {
+                            BusinessKey = obj.BusinessKey,
+                            BillDocumentKey = obj.BillDocumentKey,
+                            SerialNumber = 1,
+                            SubledgerType = "P",
+                            SubledgerId = 0,
+                            PayerPercentage = 0,
+                            PayableAmount = obj.NetBillAmount,
+                            Crnamount = 0,
+                            AdvanceAdjAmount = p_collectedAmount - p_RefundAmount,
+                            ReceivedAmount = 0,
+                            ActiveStatus = true,
+                            FormId = obj.FormID,
+                            CreatedBy = obj.UserID,
+                            CreatedOn = System.DateTime.Now,
+                            CreatedTerminal = obj.TerminalID
+                        };
+                        db.GtEfpbsl.Add(sl_Patient);
+
+                        var rh = db.GtGptbkh.Where(w => w.BookingKey == obj.BookingKey).First();
+                        rh.BillDocumentKey = obj.BillDocumentKey;
+
+                        //var rg = await db.GtGptbkg.Where(w => w.BookingKey == obj.BookingKey).ToListAsync();
+                        //foreach(var g in rg)
+                        //{
+                        //    g.IsCheckedOut = true;
+                        //    g.ActualCheckedOutDate = System.DateTime.Now;
+                        //}
+
+                        db.SaveChanges();
+                        dbContext.Commit();
+
+                        return new DO_ReturnParameter() { Status = true };
+                    }
+                    catch (Exception ex)
+                    {
+                        throw ex;
+                    }
+                }
+            }
+        }
+
+        public async Task<List<DO_PatientBillDetails>> GetGuestServiceBilling(int businessKey, long bookingKey)
+        {
+            using (var db = new eSyaEnterprise())
+            {
+                var gd = await db.GtGptbkh
+                    .Join(db.GtGppkms,
+                        g => new { g.PackageId },
+                        p => new { p.PackageId },
+                        (g, p) => new { g, p })
+                    .Where(w => w.g.BusinessKey == businessKey && w.g.BookingKey == bookingKey)
+                    .Select(r => new DO_PatientBillDetails
+                    {
+                        ServiceType = 0,
+                        ServiceCode = r.g.PackageId,
+                        ServiceName = r.p.PackageDesc,
+                        Quantity = 1,
+                        Rate = r.g.TotalPackageAmount,
+                        DiscountAmount = r.g.TotalDiscountAmount,
+                        TotalAmount = r.g.NetPackageAmount
+                    })
+                    .ToListAsync();
+
+                var gh = await db.GtGptbkh.Where(w => w.BusinessKey == businessKey && w.BookingKey == bookingKey && w.BillDocumentKey != null).FirstOrDefaultAsync();
+                if (gh != null)
+                {
+                    var pd = await db.GtEfpbdt
+                       .Join(db.GtEssrms,
+                           b => new { b.ServiceCode },
+                           s => new { ServiceCode = s.ServiceId },
+                           (b, s) => new { b, s })
+                       .Where(w => w.b.BusinessKey == businessKey && w.b.BillDocumentKey == gh.BillDocumentKey && w.b.SerialNumber > 1)
+                       .Select(r => new DO_PatientBillDetails
+                       {
+                           ServiceType = r.b.ServiceType,
+                           ServiceCode = r.b.ServiceCode,
+                           ServiceName = r.s.ServiceDesc,
+                           Quantity = 1,
+                           Rate = r.b.Rate,
+                           DiscountAmount = r.b.DiscountAmount,
+                           TotalAmount = r.b.TotalAmount,
+                       })
+                       .ToListAsync();
+
+                    gd.AddRange(pd);
+                }
+
+                return gd;
+            }
+        }
+
+        public async Task<DO_PatientBillHeader> GetGuestBillingSummary(int businessKey, long bookingKey)
+        {
+            using (var db = new eSyaEnterprise())
+            {
+                var pk = await db.GtGptbkh.Where(w => w.BusinessKey == businessKey && w.BookingKey == bookingKey)
+                    .FirstOrDefaultAsync();
+                var packageAmount = pk.NetPackageAmount;
+
+                var gh = await db.GtGptbkh.Where(w => w.BusinessKey == businessKey && w.BookingKey == bookingKey && w.BillDocumentKey != null).FirstOrDefaultAsync();
+                if (gh != null)
+                {
+                    var ph = await db.GtEfpbhd
+                       .Where(w => w.BusinessKey == businessKey && w.BillDocumentKey == gh.BillDocumentKey)
+                       .Select(r => new DO_PatientBillHeader
+                       {
+                           BillDocumentKey = r.BillDocumentKey,
+                           PackageAmount = packageAmount,
+                           TotalBillAmount = r.TotalBillAmount,
+                           TotalDiscountAmount = r.TotalDiscountAmount,
+                           TotalConcessionAmount = r.TotalConcessionAmount,
+                           NetBillAmount = r.NetBillAmount
+                       })
+                       .FirstOrDefaultAsync();
+
+                    return ph;
+                }
+                return new DO_PatientBillHeader()
+                {
+                    PackageAmount = packageAmount,
+                    NetBillAmount = packageAmount
+                };
+            }
+        }
+
+        public async Task<DO_ReturnParameter> GuestCheckOutProcess(DO_GuestCheckInDetails obj)
+        {
+            using (var db = new eSyaEnterprise())
+            {
+                using (var dbContext = db.Database.BeginTransaction())
+                {
+                    try
+                    {
+                        var bk = await db.GtGptbkh.Where(w => w.BusinessKey == obj.BusinessKey && w.BookingKey == obj.BookingKey).FirstOrDefaultAsync();
+
+                        if (bk.BillDocumentKey == null || bk.BillDocumentKey <= 0)
+                        {
+                            return new DO_ReturnParameter { Status = false, Message = "Bill has not been generated for this booking id." };
+                        }
+
+                        var ph = await db.GtEfpbhd.Where(w => w.BusinessKey == obj.BusinessKey && w.BillDocumentKey == bk.BillDocumentKey && w.ActiveStatus).FirstOrDefaultAsync();
+
+                        var p_collectedAmount = db.GtEfprdt.Where(w => w.BusinessKey == obj.BusinessKey && w.BillDocumentKey == obj.BookingKey && w.VoucherType == "R" && w.ActiveStatus).Sum(w => w.VoucherAmount);
+                        var p_RefundAmount = db.GtEfprdt.Where(w => w.BusinessKey == obj.BusinessKey && w.BillDocumentKey == obj.BookingKey && w.VoucherType == "P" && w.ActiveStatus).Sum(w => w.VoucherAmount);
+
+
+                        if (ph.NetBillAmount != p_collectedAmount + p_RefundAmount)
+                        {
+                            return new DO_ReturnParameter { Status = false, Message = "Bill amount is not fully settled." };
+                        }
+
+                        var rg = await db.GtGptbkg.Where(w => w.BusinessKey == obj.BusinessKey
+                                    && w.BookingKey == obj.BookingKey
+                                    && !w.IsCheckedOut).ToListAsync();
+
+                        if (rg.Count() <= 0)
+                        {
+                            return new DO_ReturnParameter { Status = false, Message = "Already Checkout process has been done." };
+                        }
+
+                        foreach (var g in rg)
+                        {
+                            g.IsCheckedOut = true;
+                            g.ActualCheckedOutDate = DateTime.Now;
+                            g.ModifiedBy = obj.UserID;
+                            g.ModifiedOn = DateTime.Now;
+                            g.ModifiedTerminal = obj.TerminalID;
+                        }
+
+                        db.SaveChanges();
+                        dbContext.Commit();
+
+                        return new DO_ReturnParameter() { Status = true };
+                    }
+                    catch (Exception ex)
+                    {
+                        throw ex;
+                    }
+                }
+            }
+        }
+
+        public async Task<DO_ReturnParameter> GetGuestCheckOutStatus(int businessKey, long bookingKey, int guestId)
+        {
+            using (var db = new eSyaEnterprise())
+            {
+                var rg = await db.GtGptbkg.Where(w => w.BusinessKey == businessKey
+                            && w.BookingKey == bookingKey
+                            && w.GuestId == guestId).FirstOrDefaultAsync();
+
+                if (rg.IsCheckedOut)
+                {
+                    return new DO_ReturnParameter { Status = true };
+                }
+                return new DO_ReturnParameter() { Status = false };
+
+            }
+        }
+
+        public async Task<DO_ReturnParameter> GuestBookingCancellationProcess(DO_GuestCheckInDetails obj)
+        {
+            using (var db = new eSyaEnterprise())
+            {
+                using (var dbContext = db.Database.BeginTransaction())
+                {
+                    try
+                    {
+                        var bk = await db.GtGptbkh.Where(w => w.BusinessKey == obj.BusinessKey && w.ActiveStatus && w.BookingKey == obj.BookingKey).FirstOrDefaultAsync();
+
+                        var ph = await db.GtEfpbhd.Where(w => w.BusinessKey == obj.BusinessKey && w.BillDocumentKey == bk.BillDocumentKey && w.ActiveStatus).FirstOrDefaultAsync();
+
+                        if (ph != null)
+                        {
+                            return new DO_ReturnParameter { Status = false, Message = "Bill has been generated." };
+                        }
+
+                        var p_collectedAmount = db.GtEfprdt.Where(w => w.BusinessKey == obj.BusinessKey && w.BillDocumentKey == obj.BookingKey && w.VoucherType == "R" && w.ActiveStatus).Sum(w => w.VoucherAmount);
+                        var p_RefundAmount = db.GtEfprdt.Where(w => w.BusinessKey == obj.BusinessKey && w.BillDocumentKey == obj.BookingKey && w.VoucherType == "P" && w.ActiveStatus).Sum(w => w.VoucherAmount);
+
+
+                        if (p_collectedAmount + p_RefundAmount > 0)
+                        {
+                            return new DO_ReturnParameter { Status = false, Message = "Payment has been made for this booking.Cannot cancel this booking" };
+                        }
+
+                        var rg = await db.GtGptbkg.Where(w => w.BusinessKey == obj.BusinessKey
+                                    && w.BookingKey == obj.BookingKey
+                                    && !w.IsCheckedOut).ToListAsync();
+
+                        if (rg.Count() <= 0)
+                        {
+                            return new DO_ReturnParameter { Status = false, Message = "Already Checkout process has been done." };
+                        }
+
+                        bk.ActiveStatus = false;
+                        bk.ModifiedBy = obj.UserID;
+                        bk.ModifiedOn = System.DateTime.Now;
+
+                        db.SaveChanges();
+                        dbContext.Commit();
+
+                        return new DO_ReturnParameter() { Status = true };
+                    }
+                    catch (Exception ex)
+                    {
+                        throw ex;
+                    }
+                }
+            }
+        }
+
+    }
+}

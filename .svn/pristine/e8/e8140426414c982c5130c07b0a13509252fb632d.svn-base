@@ -1,0 +1,38 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+using eSyaNatureCure.IF;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
+
+namespace eSyaNatureCure.WebAPI.Controllers
+{
+    [Route("api/[controller]/[action]")]
+    [ApiController]
+    public class GuestBookingController : ControllerBase
+    {
+        private readonly IGuestBookingRepository _guestBookingRepository;
+
+        public GuestBookingController(IGuestBookingRepository guestBookingRepository)
+        {
+            _guestBookingRepository = guestBookingRepository;
+
+        }
+
+        /// <summary>
+        /// Getting  Guest Booking by Serach Creteria.
+        /// UI Reffered - Guest Booking
+        /// </summary>
+        [HttpGet]
+        public async Task<IActionResult> GetGuestBookingBySearchCreteria(int businessKey, int roomTypeId,
+           string roomNumber, string bedNumber, string occupancyType, string gender, DateTime bookingFrom, DateTime bookingTo, DateTime checkInDate, DateTime checkOutDate)
+        {
+            var bookings = await _guestBookingRepository.GetGuestBookingBySearchCreteria ( businessKey,  roomTypeId,
+            
+                roomNumber,  bedNumber,  occupancyType,  gender,  bookingFrom,  bookingTo,  checkInDate,  checkOutDate);
+
+            return Ok(bookings);
+        }
+    }
+}

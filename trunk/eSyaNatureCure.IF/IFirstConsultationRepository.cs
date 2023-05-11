@@ -1,0 +1,18 @@
+﻿using eSyaNatureCure.DO;
+using System;
+using System.Collections.Generic;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace eSyaNatureCure.IF
+{
+    public interface IFirstConsultationRepository
+    {
+        Task<List<DO_BookinDetails>> GetConsultaionList(int businessKey);
+        Task<DO_ReturnParameter> ConsultaionConfirmation(DO_GuestCheckInDetails obj);
+        Task<DO_GuestCheckInDetails> GetGuestDetails(int businessKey, long bookingKey, int guestId);
+        Task<DO_GuestActivities> GetGuestActivities(int businessKey, long ipNumber);
+        Task<DO_ReturnParameter> AddOrUpdateGuestActivity(DO_GuestActivity obj);
+        Task<List<DO_Activities>> GetActivities();
+    }
+}

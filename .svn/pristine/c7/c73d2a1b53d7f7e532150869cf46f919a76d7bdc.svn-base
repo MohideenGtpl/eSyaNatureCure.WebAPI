@@ -1,0 +1,21 @@
+﻿using eSyaNatureCure.DO;
+using System;
+using System.Collections.Generic;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace eSyaNatureCure.IF
+{
+   public interface IMembershipRegistrationRepository
+    {
+        Task<List<DO_MembershipRegistration>> GetMembershipByNamePrefix(string memberNamePrefix);
+
+        Task<DO_MembershipRegistration> GetMembershipByMemberId(int businesskey, int memberId, string couponId);
+
+        Task<DO_ReturnParameter> InsertIntoMembership(DO_MembershipRegistration obj);
+
+        Task<DO_ReturnParameter> UpdateMembership(DO_MembershipRegistration obj);
+
+        Task<DO_ReturnParameter> ActiveOrDeActiveMembership(bool status, int businesskey, long memberId, string couponId);
+    }
+}

@@ -1,0 +1,15 @@
+﻿using eSyaNatureCure.DO;
+using System;
+using System.Collections.Generic;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace eSyaNatureCure.IF
+{
+    public interface IGuestPaymentRepository
+    {
+        Task<DO_ReturnParameter> InsertPatientReceipt(DO_GuestPaymentReceiptDetails obj);
+
+        Task<List<DO_GuestPaymentReceiptDetails>> GetGuestPaymentReceiptDetails(int businessKey, long bookingKey);
+    }
+}

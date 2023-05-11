@@ -1,0 +1,38 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Text;
+
+namespace eSyaNatureCure.DO
+{
+    public class DO_GuestActivity
+    {
+        public int BusinessKey { get; set; }
+        public long Ipnumber { get; set; }
+        public int SerialNumber { get; set; }
+        public long HospitalNumber { get; set; }
+        public int ActivityId { get; set; }
+        public int ActivityDayId { get; set; }
+        public DateTime ActivityDate { get; set; }
+        public TimeSpan ActivityFromTime { get; set; }
+        public TimeSpan ActivityToTime { get; set; }
+        public string ActivityStatus { get; set; }
+        public bool ReviewGiven { get; set; }
+        public int? ServiceRating { get; set; }
+        public string RatingComments { get; set; }
+        public bool ActiveStatus { get; set; }
+
+        public string ActivityDesc { get; set; }
+        public string ScheduleType { get; set; }
+        public double ActivityDurationHH { get; set; }
+        public double ActivityDurationMM { get; set; }
+    }
+
+    public class DO_GuestActivityHeader
+    {
+        public int ActivityDayId { get; set; }
+        public DateTime ActivityDate { get; set; }
+        public double ActivityDurationHH { get; set; }
+        public double ActivityDurationMM { get; set; }
+    }
+
+}

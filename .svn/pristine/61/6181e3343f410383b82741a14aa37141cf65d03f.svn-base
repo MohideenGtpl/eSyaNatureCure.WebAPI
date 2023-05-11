@@ -1,0 +1,257 @@
+﻿using eSyaNatureCure.DL.Entities;
+using eSyaNatureCure.DO;
+using eSyaNatureCure.IF;
+using Microsoft.EntityFrameworkCore;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace eSyaNatureCure.DL.Repository
+{
+   public class RoomReservationRepository: IRoomReservationRepository
+    {
+        #region Room Reservation
+
+        public async Task<List<DO_RoomReservation>> GetRoomReservationsbyBusinesskey(int businesskey)
+        {
+            using (var db = new eSyaEnterprise())
+            {
+                try
+                {
+                    var result = db.GtGprmrv.Where(x=>x.BusinessKey==businesskey).Join(db.GtEcapcd, 
+                            lkey => new { lkey.ReasonType },
+                            ent => new  {ReasonType = ent.ApplicationCode },
+                            (lkey, ent) => new { lkey, ent }).Join(db.GtGprmty,
+                            Bloc => new { Bloc.lkey.RoomTypeId },
+                            seg => new { seg.RoomTypeId },
+                            (Bloc, seg) => new { Bloc, seg }).Join(db.GtGprmbm,
+                            bm=>new { bm.Bloc.lkey.BedNumber, bm.Bloc.lkey.RoomNumber},
+                            bme=>new {bme.BedNumber,bme.RoomNumber},
+                            (bm, bme) => new { bm, bme })
+                            .Select(c => new DO_RoomReservation
+                            {
+                                BusinessKey = c.bm.Bloc.lkey.BusinessKey,
+                                RoomTypeId = c.bm.Bloc.lkey.RoomTypeId,
+                                RoomNumber = c.bm.Bloc.lkey.RoomNumber,
+                                BedNumber = c.bm.Bloc.lkey.BedNumber,
+                                EffectiveDate = c.bm.Bloc.lkey.EffectiveDate,
+                                TillDate = c.bm.Bloc.lkey.TillDate,
+                                ReasonType = c.bm.Bloc.lkey.ReasonType,
+                                Comments = c.bm.Bloc.lkey.Comments,
+                                ActiveStatus = c.bm.Bloc.lkey.ActiveStatus,
+                                RoomTypeDesc = c.bm.seg.RoomTypeDesc,
+                                ReasonTypeDesc=c.bm.Bloc.ent.CodeDesc,
+                                RoomNumberDesc=c.bme.RoomNumber,
+                                BedNumberDesc=c.bme.BedNumber
+
+                            }).ToListAsync();
+                    return await result;
+                }
+                catch (Exception ex)
+                {
+                    throw ex;
+                }
+            }
+        }
+
+        public async Task<DO_ReturnParameter> InsertIntoRoomReservation(DO_RoomReservation obj)
+        {
+            using (eSyaEnterprise db = new eSyaEnterprise())
+            {
+                using (var dbContext = db.Database.BeginTransaction())
+                {
+                    try
+                    {
+
+                        GtGprmrv is_rsExists = db.GtGprmrv.FirstOrDefault(b =>b.BusinessKey==obj.BusinessKey && b.RoomTypeId == obj.RoomTypeId 
+                        && b.RoomNumber.ToUpper().Replace(" ", "") == obj.RoomNumber.ToUpper().Replace(" ", "")
+                        && b.BedNumber.ToUpper().Replace(" ", "") == obj.BedNumber.ToUpper().Replace(" ", "")
+                        && b.EffectiveDate == obj.EffectiveDate);
+                        if (is_rsExists == null)
+                        {
+
+                            var _rs = new GtGprmrv
+                            {
+                                BusinessKey=obj.BusinessKey,
+                                RoomTypeId = obj.RoomTypeId,
+                                RoomNumber = obj.RoomNumber,
+                                BedNumber = obj.BedNumber,
+                                EffectiveDate = obj.EffectiveDate,
+                                TillDate = obj.TillDate,
+                                ReasonType=obj.ReasonType,
+                                Comments = obj.Comments,
+                                ActiveStatus = obj.ActiveStatus,
+                                FormId = obj.FormId,
+                                CreatedBy = obj.UserID,
+                                CreatedOn = DateTime.Now,
+                                CreatedTerminal = obj.TerminalID
+                            };
+
+                            db.GtGprmrv.Add(_rs);
+                            await db.SaveChangesAsync();
+                            dbContext.Commit();
+                            return new DO_ReturnParameter() { Status = true, Message = "Room Reserved Successfully" };
+
+                        }
+                        else
+                        {
+                            return new DO_ReturnParameter() { Status = false, Message = "Room already Reserved try another one." };
+                        }
+                    }
+                    catch (DbUpdateException ex)
+                    {
+                        dbContext.Rollback();
+                        throw new Exception(CommonMethod.GetValidationMessageFromException(ex));
+                    }
+                    catch (Exception ex)
+                    {
+                        dbContext.Rollback();
+                        throw ex;
+                    }
+                }
+            }
+        }
+
+        public async Task<DO_ReturnParameter> UpdateRoomReservation(DO_RoomReservation obj)
+        {
+            using (eSyaEnterprise db = new eSyaEnterprise())
+            {
+                using (var dbContext = db.Database.BeginTransaction())
+                {
+
+                    try
+                    {
+                        GtGprmrv _rs = db.GtGprmrv.FirstOrDefault(b => b.BusinessKey == obj.BusinessKey && b.RoomTypeId == obj.RoomTypeId
+                        && b.RoomNumber.ToUpper().Replace(" ", "") == obj.RoomNumber.ToUpper().Replace(" ", "")
+                        && b.BedNumber.ToUpper().Replace(" ", "") == obj.BedNumber.ToUpper().Replace(" ", "")
+                        && b.EffectiveDate == obj.EffectiveDate);
+
+                        if (_rs != null)
+                        {
+
+                            _rs.TillDate = obj.TillDate;
+                            _rs.ReasonType = obj.ReasonType;
+                            _rs.Comments = obj.Comments;
+                            _rs.ActiveStatus = obj.ActiveStatus;
+                            _rs.ModifiedBy = obj.UserID;
+                            _rs.ModifiedOn = DateTime.Now;
+                            _rs.ModifiedTerminal = obj.TerminalID;
+                            await db.SaveChangesAsync();
+                            dbContext.Commit();
+                            return new DO_ReturnParameter() { Status = true, Message = "Updated sucessfully." };
+
+
+                        }
+                        else
+                        {
+                            return new DO_ReturnParameter() { Status = false, Message = "Couldn't find Reservation" };
+                        }
+
+                    }
+                    catch (DbUpdateException ex)
+                    {
+                        dbContext.Rollback();
+                        throw new Exception(CommonMethod.GetValidationMessageFromException(ex));
+                    }
+                    catch (Exception ex)
+                    {
+                        dbContext.Rollback();
+                        throw ex;
+                    }
+                }
+            }
+        }
+
+        public async Task<DO_ReturnParameter> ActiveOrDeActiveRoomReservation(DO_RoomReservation obj)
+        {
+            using (var db = new eSyaEnterprise())
+            {
+                using (var dbContext = db.Database.BeginTransaction())
+                {
+                    try
+                    {
+                        GtGprmrv _rs = db.GtGprmrv.FirstOrDefault(b => b.BusinessKey == obj.BusinessKey && b.RoomTypeId == obj.RoomTypeId
+                       && b.RoomNumber.ToUpper().Replace(" ", "") == obj.RoomNumber.ToUpper().Replace(" ", "")
+                       && b.BedNumber.ToUpper().Replace(" ", "") == obj.BedNumber.ToUpper().Replace(" ", "")
+                       && b.EffectiveDate == obj.EffectiveDate);
+
+                        if (_rs == null)
+                        {
+                            return new DO_ReturnParameter() { Status = false, Message = "Room Reservation is not exist" };
+                        }
+
+                        _rs.ActiveStatus = obj.Status;
+                        await db.SaveChangesAsync();
+                        dbContext.Commit();
+
+                        if (obj.Status == true)
+                            return new DO_ReturnParameter() { Status = true, Message = "Room Reservation  Activated Successfully." };
+                        else
+                            return new DO_ReturnParameter() { Status = true, Message = "Room Reservation  De Activated Successfully." };
+                    }
+                    catch (DbUpdateException ex)
+                    {
+                        dbContext.Rollback();
+                        throw new Exception(CommonMethod.GetValidationMessageFromException(ex));
+
+                    }
+                    catch (Exception ex)
+                    {
+                        dbContext.Rollback();
+                        throw ex;
+                    }
+                }
+            }
+        }
+
+        public async Task<List<DO_BedMaster>> GetActiveRoomNumbersbyRoomType(int roomtype)
+        {
+            using (var db = new eSyaEnterprise())
+            {
+                try
+                {
+                    var ds =await db.GtGprmbm.Where(x => x.ActiveStatus == true && x.RoomTypeId==roomtype)
+                        .Select(r => new DO_BedMaster
+                        {
+                            RoomNumber = r.RoomNumber
+
+                        }).ToListAsync();
+                     return ds.GroupBy(x => x.RoomNumber).Select(y => y.First()).Distinct().ToList(); 
+
+
+                }
+                catch (Exception ex)
+                {
+                    throw ex;
+                }
+            }
+        }
+
+        public async Task<List<DO_BedMaster>> GetActiveBedNumbersbyRoomNumber(int roomtype,string roomnumber)
+        {
+            using (var db = new eSyaEnterprise())
+            {
+                try
+                {
+                    var ds = db.GtGprmbm.Where(x => x.ActiveStatus == true && x.RoomTypeId==roomtype
+                    && x.RoomNumber.ToUpper().Trim() == roomnumber.ToUpper().Trim())
+                         .Select(r => new DO_BedMaster
+                         {
+                             BedNumber = r.BedNumber
+
+                         }).ToListAsync();
+                    return await ds;
+
+
+                }
+                catch (Exception ex)
+                {
+                    throw ex;
+                }
+            }
+        }
+        #endregion  
+    }
+}

@@ -1,0 +1,112 @@
+﻿using eSyaNatureCure.DL.Entities;
+using eSyaNatureCure.DO;
+using eSyaNatureCure.IF;
+using Microsoft.EntityFrameworkCore;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace eSyaNatureCure.DL.Repository
+{
+   public class GuestBookingRepository: IGuestBookingRepository
+    {
+        public List<DO_GuestBooking> GetGuestBookingBySearchCreteria(int businessKey, int roomTypeId,
+           string roomNumber, string bedNumber, string occupancyType, string gender, DateTime? bookingFrom, DateTime? bookingTo, DateTime? checkInDate, DateTime? checkOutDate)
+        {
+            try
+            {
+                using (var db = new eSyaEnterprise())
+                {
+                  
+                    var ds = db.GtGptbkh
+                     .Join(db.GtGptbkp,
+                         a => new { a.BusinessKey, a.BookingKey },
+                         p => new { p.BusinessKey, p.BookingKey },
+                         (a, p) => new { a, p })
+                     
+                     .Join(db.GtGprmty,
+                        apd => apd.p.RoomTypeId,
+                        s => s.RoomTypeId,
+                        (apd, s) => new { apd, s })
+                        .Join(db.GtGptbkg,
+                        apds => new { apds.apd.a.BusinessKey, apds.apd.a.BookingKey },
+                         m => new { m.BusinessKey, m.BookingKey },
+                        (apds, m) => new { apds, m  })
+
+                     .Where(w => w.apds.apd.a.BusinessKey == businessKey &&
+                      (bool)w.m.IsCheckedIn == true && (bool)w.m.IsCheckedOut == false)
+
+                     //&& w.apds.apd.a.BookingDate.Date >= bookingFrom.Date
+                     //&& w.apds.apd.a.BookingDate.Date <= bookingTo.Date
+                     //&& w.apds.apd.a.CheckInDate.Date >= checkInDate.Date
+                     //&& w.apds.apd.a.CheckOutDate.Date <= checkOutDate.Date)
+
+                     .Select(r => new DO_GuestBooking
+                     {
+                         BusinessKey = r.apds.apd.a.BusinessKey,
+                         BookingKey = r.apds.apd.a.BookingKey,
+                         BookingDate = r.apds.apd.a.BookingDate.Date,
+                         CheckInDate = r.apds.apd.a.CheckInDate.Date,
+                         CheckOutDate = r.apds.apd.a.CheckOutDate.Date,
+                         FirstName = r.m != null ? r.m.FirstName : "",
+                         LastName = r.m != null ? r.m.LastName : "",
+                         Age = r.m.AgeYy,
+                         Gender=r.m.Gender,
+                         MobileNo=r.m.MobileNumber,
+                         NetPackageAmount=r.apds.apd.a.NetPackageAmount,
+                         PaymentMethod =r.apds.apd.a.PaymentMethod,
+                         PaymentReceived =r.apds.apd.a.PaymentReceived,
+                         RoomTypeId = r.apds.apd.p.RoomTypeId,
+                         RoomTypeName = r.apds.s.RoomTypeDesc,
+                         RoomTypeNumber = r.apds.apd.p.RoomNumber,
+                         BedNumber = r.apds.apd.p.BedNumber,
+                         GuestId = r.apds.apd.p.GuestId,
+                         OccupancyType = r.apds.apd.p.OccupancyType,
+                         PackagePrice = r.apds.apd.p.PackagePrice,
+                        
+                     }).ToList();
+
+                    if (bookingFrom != null && bookingTo !=null)
+                    {
+                        ds = ds.Where(x => x.BookingDate.Date >= bookingFrom.Value.Date && x.BookingDate.Date <= bookingTo.Value.Date).ToList();
+                    }
+                    if (checkInDate != null && checkOutDate != null)
+                    {
+                        ds = ds.Where(x => x.CheckInDate.Date >= checkInDate.Value.Date && x.CheckOutDate.Date <= checkOutDate.Value.Date).ToList();
+                    }
+                    if (roomTypeId != 0)
+                    {
+                        ds = ds.Where(x => x.RoomTypeId == roomTypeId).ToList();
+                    }
+                    if (roomTypeId != 0)
+                    {
+                        ds = ds.Where(x => x.RoomTypeId == roomTypeId).ToList();
+                    }
+                    if (roomNumber!="0")
+                    {
+                        ds = ds.Where(x => x.RoomTypeNumber == roomNumber).ToList();
+                    }
+                    if (bedNumber != "0")
+                    {
+                        ds = ds.Where(x => x.BedNumber == bedNumber).ToList();
+                    }
+                    if (gender != "0")
+                    {
+                        ds = ds.Where(x => x.Gender == gender).ToList();
+                    }
+                    if (occupancyType != "0")
+                    {
+                        ds = ds.Where(x => x.OccupancyType == occupancyType).ToList();
+                    }
+                    return  ds.ToList();
+                }
+            }
+            catch (Exception ex)
+            {
+                throw ex;
+            }
+        }
+    }
+}

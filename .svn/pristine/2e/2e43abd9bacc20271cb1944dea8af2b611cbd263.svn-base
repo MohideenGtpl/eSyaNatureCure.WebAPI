@@ -1,0 +1,47 @@
+﻿using eSyaNatureCure.DO;
+using System;
+using System.Collections.Generic;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace eSyaNatureCure.IF
+{
+   public interface IMembershipRegistrationRepository
+    {
+        #region MemberShip Header
+        Task<List<DO_MembershipHeader>> GetMembershipHeaderByNamePrefix(string memberNamePrefix);
+
+        Task<DO_MembershipHeader> GetMembershipHeaderByMemberId(DO_MembershipHeader objm);
+
+        Task<DO_ReturnParameterwithMemberId> InsertIntoMembershipHeader(DO_MembershipHeader obj);
+
+        Task<DO_ReturnParameterwithMemberId> UpdateMembershipHeader(DO_MembershipHeader obj);
+
+        Task<DO_ReturnParameter> ActiveOrDeActiveMembershipHeader(bool status, int businesskey, long memberId);
+        #endregion
+
+        #region MemberShip Types
+        Task<List<DO_MembershipType>> GetMembershipTypes(int businesskey, long memberId);
+
+        Task<DO_ReturnParameter> InsertOrUpdateIntoMembershipType(DO_MembershipType obj);
+
+        Task<DO_ReturnParameter> ActiveOrDeActiveMembershipType(bool status, int businesskey, long memberId, string couponId);
+        #endregion
+
+        #region MemberShip Donation
+        Task<List<DO_MembershipDonation>> GetMembershipDonations(int businesskey, long memberId);
+
+        Task<DO_ReturnParameter> InsertOrUpdateIntoMembershipDonation(DO_MembershipDonation obj);
+
+        Task<DO_ReturnParameter> ActiveOrDeActiveMembershipDonation(bool status, int businesskey, long memberId, int serialno);
+        #endregion
+
+        #region Common Methods
+        Task<List<DO_Place>> GetStateList(int isdCode);
+
+        Task<List<DO_Place>> GetCityList(int isdCode, int? stateCode);
+
+        List<DO_ApplicationCodes> GetMembershipTypebyPatientId(int patientTypeId);
+        #endregion
+    }
+}

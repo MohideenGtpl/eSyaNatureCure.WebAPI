@@ -1,0 +1,33 @@
+﻿using System;
+using System.Collections.Generic;
+
+namespace eSyaNatureCure.DL.Entities
+{
+    public partial class GtGptrgh
+    {
+        public int BusinessKey { get; set; }
+        public long MemberId { get; set; }
+        public int MembershipType { get; set; }
+        public DateTime RegisteredDate { get; set; }
+        public string FirstName { get; set; }
+        public string MiddleName { get; set; }
+        public string LastName { get; set; }
+        public string Gender { get; set; }
+        public int AgeYy { get; set; }
+        public int Isdcode { get; set; }
+        public string MobileNumber { get; set; }
+        public string EmailId { get; set; }
+        public int? CityCode { get; set; }
+        public int? StateCode { get; set; }
+        public long? Uhid { get; set; }
+        public decimal DonationAmount { get; set; }
+        public bool ActiveStatus { get; set; }
+        public string FormId { get; set; }
+        public int CreatedBy { get; set; }
+        public DateTime CreatedOn { get; set; }
+        public string CreatedTerminal { get; set; }
+        public int? ModifiedBy { get; set; }
+        public DateTime? ModifiedOn { get; set; }
+        public string ModifiedTerminal { get; set; }
+    }
+}

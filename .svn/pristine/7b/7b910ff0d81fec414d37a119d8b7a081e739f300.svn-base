@@ -1,0 +1,411 @@
+﻿using eSyaNatureCure.DL.Entities;
+using eSyaNatureCure.DO;
+using eSyaNatureCure.IF;
+using Microsoft.EntityFrameworkCore;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace eSyaNatureCure.DL.Repository
+{
+    public class GuestCheckInRepository: IGuestCheckInRepository
+    {
+        public async Task<DO_GuestCheckInDetails> GetGuestDetailById(int businessKey, long bookingKey, int guestId)
+        {
+            using (var db = new eSyaEnterprise())
+            {
+                var gd = await db.GtGptbkh
+                    .Join(db.GtGptbkp,
+                        h => new { h.BusinessKey, h.BookingKey},
+                        p => new { p.BusinessKey, p.BookingKey},
+                        (h, p) => new { h, p })
+                    .Join(db.GtGptbkg,
+                        hp => new { hp.p.BusinessKey, hp.p.BookingKey, hp.p.GuestId },
+                        g => new { g.BusinessKey, g.BookingKey, g.GuestId },
+                        (hp, g) => new { hp, g })
+                    .Where(w => w.hp.p.BusinessKey == businessKey && w.hp.h.BookingKey == bookingKey && w.hp.p.GuestId == guestId)
+                    .Select(r=> new DO_GuestCheckInDetails
+                    {
+                        BookingKey = r.hp.h.BookingKey,
+                        PackageDesc =  db.GtGppkms.Where(w=>w.PackageId == r.hp.h.PackageId).FirstOrDefault().PackageDesc,
+                        TotalPackageAmount = r.hp.h.TotalPackageAmount,
+                        CheckedInDate = r.hp.h.CheckInDate,
+                        CheckedOutDate = r.hp.h.CheckOutDate,
+                        RoomTypeName = db.GtGprmty.Where(w=>w.RoomTypeId == r.hp.p.RoomTypeId).FirstOrDefault().RoomTypeDesc,
+                        RoomNumber = r.hp.p.RoomNumber,
+                        BedNumber = r.hp.p.BedNumber,
+                        OccupancyType = r.hp.p.OccupancyType,
+                        PackagePrice = r.hp.p.PackagePrice,
+                        GuestId = r.hp.p.GuestId,
+                        FirstName = r.g.FirstName,
+                        LastName = r.g.LastName,
+                        Gender = r.g.Gender,
+                        AgeYy = r.g.AgeYy,
+                        MobileNumber = r.g.MobileNumber,
+                        EmailId = r.g.EmailId,
+                        UHID = r.g.Uhid,
+                        IsCheckedIn = r.g.IsCheckedIn,
+                        IsCheckedOut = r.g.IsCheckedOut
+                    })
+                    .FirstOrDefaultAsync();
+
+                return gd;
+            }
+        }
+
+        public async Task<List<DO_GuestCheckInDetails>> GetGuestDetailsByBookingKey(int businessKey, long bookingKey)
+        {
+            using (var db = new eSyaEnterprise())
+            {
+                var gd = await db.GtGptbkh
+                    .Join(db.GtGptbkp,
+                        h => new { h.BusinessKey, h.BookingKey },
+                        p => new { p.BusinessKey, p.BookingKey },
+                        (h, p) => new { h, p })
+                    .Join(db.GtGptbkg,
+                        hp => new { hp.p.BusinessKey, hp.p.BookingKey, hp.p.GuestId },
+                        g => new { g.BusinessKey, g.BookingKey, g.GuestId },
+                        (hp, g) => new { hp, g })
+                    .Where(w => w.hp.p.BusinessKey == businessKey && w.hp.h.BookingKey == bookingKey)
+                    .Select(r => new DO_GuestCheckInDetails
+                    {
+                        BookingKey = r.hp.h.BookingKey,
+                        PackageDesc = db.GtGppkms.Where(w => w.PackageId == r.hp.h.PackageId).FirstOrDefault().PackageDesc,
+                        TotalPackageAmount = r.hp.h.TotalPackageAmount,
+                        CheckedInDate = r.hp.h.CheckInDate,
+                        CheckedOutDate = r.hp.h.CheckOutDate,
+                        RoomTypeName = db.GtGprmty.Where(w => w.RoomTypeId == r.hp.p.RoomTypeId).FirstOrDefault().RoomTypeDesc,
+                        RoomNumber = r.hp.p.RoomNumber,
+                        BedNumber = r.hp.p.BedNumber,
+                        OccupancyType = r.hp.p.OccupancyType,
+                        PackagePrice = r.hp.p.PackagePrice,
+                        GuestId = r.hp.p.GuestId,
+                        FirstName = r.g.FirstName,
+                        LastName = r.g.LastName,
+                        Gender = r.g.Gender,
+                        AgeYy = r.g.AgeYy,
+                        MobileNumber = r.g.MobileNumber,
+                        EmailId = r.g.EmailId,
+                        UHID = r.g.Uhid,
+                        IsCheckedIn = r.g.IsCheckedIn,
+                        IsCheckedOut = r.g.IsCheckedOut
+                    })
+                    .ToListAsync();
+
+                return gd;
+            }
+        }
+
+        public async Task<DO_ReturnParameter> CreateGuestCheckin(DO_GuestCheckInDetails obj)
+        {
+            using (var db = new eSyaEnterprise())
+            {
+                using (var dbContext = db.Database.BeginTransaction())
+                {
+                    try
+                    {
+                        //var exists = db.GtEfoppr.Where(w => w.MobileNumber == obj.PatientMobileNumber).Count();
+                        //if (exists > 0)
+                        //{
+                        //    return new DO_ReturnParameter() { Status = false, Message = "Mobile Number Already Exists" };
+                        //}
+
+                        var gd = await db.GtGptbkg.Where(w => w.BusinessKey == obj.BusinessKey && w.BookingKey == obj.BookingKey && w.GuestId == obj.GuestId).FirstOrDefaultAsync();
+                        gd.IsCheckedIn = true;
+                        gd.ActualCheckedInDate = System.DateTime.Now;
+
+                        GtEfoppr pp;
+                        var dc_pm = await db.GtEcdcsn
+                         .Where(w => w.BusinessKey == obj.BusinessKey
+                             && w.DocumentId == 1).FirstOrDefaultAsync();
+                        dc_pm.CurrentDocNumber = dc_pm.CurrentDocNumber + 1;
+                        var patient_id = System.DateTime.Now.ToString("yMM") + (dc_pm.CurrentDocNumber).ToString().PadLeft(4, '0');
+
+                        DateTime dob = System.DateTime.Now.AddYears(-gd.AgeYy);
+                        pp = new GtEfoppr
+                        {
+                            RUhid = dc_pm.CurrentDocNumber,
+                            SUhid = dc_pm.CurrentDocNumber,
+                            RegistrationDate = System.DateTime.Now,
+                            BusinessKey = obj.BusinessKey,
+                            FirstName = gd.FirstName,
+                            LastName = gd.LastName,
+                            Gender = gd.Gender,
+                            IsDobapplicable = false,
+                            DateOfBirth = dob,
+                            AgeYy = gd.AgeYy,
+                            AgeMm = 0,
+                            AgeDd = 0,
+                            Isdcode = 0,
+                            MobileNumber = gd.MobileNumber,
+                            EMailId = gd.EmailId,
+                            PatientStatus = "Y",
+                            RecordStatus = 0,
+                            BillStatus = "O",
+                            PatientId = patient_id,
+                            ActiveStatus = true,
+                            CreatedBy = obj.UserID,
+                            CreatedOn = System.DateTime.Now,
+                            CreatedTerminal = obj.TerminalID
+                        };
+
+                        db.GtEfoppr.Add(pp);
+
+                        await db.SaveChangesAsync();
+                        dbContext.Commit();
+
+                        return new DO_ReturnParameter() { Status = true };
+                    }
+                    catch (Exception ex)
+                    {
+                        throw ex;
+                    }
+                }
+            }
+        }
+        #region Document Upload
+        public async Task<List<DO_GuestDocumentUpload>> GetGuestDocumentUploadDetailsByBookingKey(int businessKey, long bookingKey,int guestId)
+        {
+            using (var db = new eSyaEnterprise())
+            {
+                try
+                {
+                    var ds = db.GtGptbkd.Where(x=>x.BusinessKey==businessKey && x.BookingKey==bookingKey && x.GuestId==guestId)
+                        .Select(d => new DO_GuestDocumentUpload
+                        {
+                            BusinessKey=d.BusinessKey,
+                            BookingKey=d.BookingKey,
+                            GuestId=d.GuestId,
+                            SerialNo=d.SerialNo,
+                            DocumentName=d.DocumentName,
+                            DocumentUrl=d.DocumentUrl,
+                            ActiveStatus = d.ActiveStatus
+                        }).ToListAsync();
+                    return await ds;
+
+
+                }
+                catch (Exception ex)
+                {
+                    throw ex;
+                }
+            }
+        }
+
+        public async Task<DO_ReturnParameter> InsertGuestDocumentUpload(DO_GuestDocumentUpload obj)
+        {
+            using (eSyaEnterprise db = new eSyaEnterprise())
+            {
+                using (var dbContext = db.Database.BeginTransaction())
+                {
+                    try
+                    {
+
+                        GtGptbkd is_documentExists = db.GtGptbkd.FirstOrDefault(d => d.BusinessKey == obj.BusinessKey && d.BookingKey==d.BookingKey && d.GuestId==obj.GuestId && d.SerialNo==obj.SerialNo);
+                        if (is_documentExists == null)
+                        {
+                            int maxval = db.GtGptbkd.Select(d => d.SerialNo).DefaultIfEmpty().Max();
+                            int serial_no = maxval + 1;
+                            var document = new GtGptbkd
+                            {
+                                BusinessKey = obj.BusinessKey,
+                                BookingKey = obj.BookingKey,
+                                GuestId = obj.GuestId,
+                                SerialNo = serial_no,
+                                DocumentName = obj.DocumentName,
+                                DocumentUrl = obj.DocumentUrl,
+                                ActiveStatus = obj.ActiveStatus,
+                                FormId = obj.FormId,
+                                CreatedBy = obj.UserID,
+                                CreatedOn = DateTime.Now,
+                                CreatedTerminal = obj.TerminalID
+                            };
+
+                            db.GtGptbkd.Add(document);
+                            await db.SaveChangesAsync();
+                            dbContext.Commit();
+                            return new DO_ReturnParameter() { Status = true, Message = "Document Uploaded Successfully" };
+
+                        }
+                        else
+                        {
+                            return new DO_ReturnParameter() { Status = false, Message = "Document is already Exists try another one." };
+                        }
+                    }
+                    catch (DbUpdateException ex)
+                    {
+                        dbContext.Rollback();
+                        throw new Exception(CommonMethod.GetValidationMessageFromException(ex));
+                    }
+                    catch (Exception ex)
+                    {
+                        dbContext.Rollback();
+                        throw ex;
+                    }
+                }
+            }
+        }
+
+        public async Task<DO_ReturnParameter> UpdateGuestDocumentUpload(DO_GuestDocumentUpload obj)
+        {
+            using (eSyaEnterprise db = new eSyaEnterprise())
+            {
+                using (var dbContext = db.Database.BeginTransaction())
+                {
+
+                    try
+                    {
+                        GtGptbkd doc = db.GtGptbkd.FirstOrDefault(d => d.BusinessKey == obj.BusinessKey && d.BookingKey == d.BookingKey && d.GuestId == obj.GuestId && d.SerialNo == obj.SerialNo);
+                       
+                        if (doc != null)
+                        {
+
+                            doc.BusinessKey = obj.BusinessKey;
+                            doc.BookingKey = obj.BookingKey;
+                            doc.GuestId = obj.GuestId;
+                            doc.SerialNo = obj.SerialNo;
+                            doc.DocumentName = obj.DocumentName;
+                            doc.DocumentUrl = obj.DocumentUrl;
+                            doc.ActiveStatus = obj.ActiveStatus;
+                            doc.ModifiedBy = obj.UserID;
+                            doc.ModifiedOn = DateTime.Now;
+                            doc.ModifiedTerminal = obj.TerminalID;
+                            await db.SaveChangesAsync();
+                            dbContext.Commit();
+                            return new DO_ReturnParameter() { Status = true, Message = "Document Updated sucessfully." };
+                           
+                        }
+                        else
+                        {
+                            return new DO_ReturnParameter() { Status = false, Message = "Couldn't find Document" };
+                        }
+
+                    }
+                    catch (DbUpdateException ex)
+                    {
+                        dbContext.Rollback();
+                        throw new Exception(CommonMethod.GetValidationMessageFromException(ex));
+                    }
+                    catch (Exception ex)
+                    {
+                        dbContext.Rollback();
+                        throw ex;
+                    }
+                }
+            }
+        }
+
+        public async Task<DO_ReturnParameter> ActiveOrDeActiveGuestDocumentUpload(DO_GuestDocumentUpload obj)
+        {
+            using (eSyaEnterprise db = new eSyaEnterprise())
+            {
+                using (var dbContext = db.Database.BeginTransaction())
+                {
+
+                    try
+                    {
+                        GtGptbkd doc = db.GtGptbkd.FirstOrDefault(d => d.BusinessKey == obj.BusinessKey && d.BookingKey == d.BookingKey && d.GuestId == obj.GuestId && d.SerialNo == obj.SerialNo);
+
+                        if (doc != null)
+                        {
+                            doc.ActiveStatus = obj.Status;
+                            await db.SaveChangesAsync();
+                            dbContext.Commit();
+                            if (obj.Status == true)
+                                return new DO_ReturnParameter() { Status = true, Message = "Document  Activated Successfully." };
+                            else
+                                return new DO_ReturnParameter() { Status = true, Message = "Document  De Activated Successfully." };
+
+                        }
+                        else
+                        {
+                            return new DO_ReturnParameter() { Status = false, Message = "Couldn't find Document" };
+                        }
+
+                    }
+                    catch (DbUpdateException ex)
+                    {
+                        dbContext.Rollback();
+                        throw new Exception(CommonMethod.GetValidationMessageFromException(ex));
+                    }
+                    catch (Exception ex)
+                    {
+                        dbContext.Rollback();
+                        throw ex;
+                    }
+                }
+            }
+        }
+
+        public async Task<DO_GuestDocumentUpload> GetDocumentUploadbySerialNumber(int businessKey, long bookingKey, int guestId, int serialno)
+        {
+            using (var db = new eSyaEnterprise())
+            {
+                try
+                {
+                    var ds = db.GtGptbkd.Where(x => x.BusinessKey == businessKey && x.BookingKey == bookingKey && x.GuestId == guestId &&x.SerialNo== serialno)
+                        .Select(d => new DO_GuestDocumentUpload
+                        {
+                            BusinessKey = d.BusinessKey,
+                            BookingKey = d.BookingKey,
+                            GuestId = d.GuestId,
+                            SerialNo = d.SerialNo,
+                            DocumentName = d.DocumentName,
+                            DocumentUrl = d.DocumentUrl,
+                            ActiveStatus = d.ActiveStatus
+                        }).FirstOrDefaultAsync();
+                    return await ds;
+
+
+                }
+                catch (Exception ex)
+                {
+                    throw ex;
+                }
+            }
+        }
+
+        public async Task<DO_GuestDocumentUpload> DeleteDocument(int businessKey, long bookingKey, int guestId, int serialno)
+        {
+            using (eSyaEnterprise db = new eSyaEnterprise())
+            {
+                using (var dbContext = db.Database.BeginTransaction())
+                {
+                    try
+                    {
+
+                        var document = db.GtGptbkd.Where(x => x.BusinessKey == businessKey && x.BookingKey == bookingKey && x.GuestId == guestId && x.SerialNo == serialno).FirstOrDefault();
+                        if (document != null)
+                        {
+                            DO_GuestDocumentUpload d = new DO_GuestDocumentUpload();
+                            d.DocumentUrl = document.DocumentUrl;
+                            db.GtGptbkd.Remove(document);
+                            await db.SaveChangesAsync();
+                            dbContext.Commit();
+                            return new DO_GuestDocumentUpload() { Status = true,DocumentUrl=d.DocumentUrl };
+
+                        }
+                        else
+                        {
+                            return new DO_GuestDocumentUpload() { Status = false, DocumentUrl = "" };
+                        }
+                       
+                    }
+                    catch (DbUpdateException ex)
+                    {
+                        dbContext.Rollback();
+                        throw new Exception(CommonMethod.GetValidationMessageFromException(ex));
+                    }
+                    catch (Exception ex)
+                    {
+                        dbContext.Rollback();
+                        throw ex;
+                    }
+                }
+            }
+        }
+        #endregion Document Upload
+    }
+}

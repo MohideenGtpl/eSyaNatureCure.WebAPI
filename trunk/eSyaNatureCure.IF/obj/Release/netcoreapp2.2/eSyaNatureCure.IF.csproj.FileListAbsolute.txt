@@ -1,0 +1,12 @@
+D:\eSya Project\Solution\Project_eSyaWebAPI\eSyaNatureCure.WebAPI\trunk\eSyaNatureCure.IF\bin\Release\netcoreapp2.2\eSyaNatureCure.IF.deps.json
+D:\eSya Project\Solution\Project_eSyaWebAPI\eSyaNatureCure.WebAPI\trunk\eSyaNatureCure.IF\bin\Release\netcoreapp2.2\eSyaNatureCure.IF.dll
+D:\eSya Project\Solution\Project_eSyaWebAPI\eSyaNatureCure.WebAPI\trunk\eSyaNatureCure.IF\bin\Release\netcoreapp2.2\eSyaNatureCure.IF.pdb
+D:\eSya Project\Solution\Project_eSyaWebAPI\eSyaNatureCure.WebAPI\trunk\eSyaNatureCure.IF\bin\Release\netcoreapp2.2\eSyaNatureCure.DO.dll
+D:\eSya Project\Solution\Project_eSyaWebAPI\eSyaNatureCure.WebAPI\trunk\eSyaNatureCure.IF\bin\Release\netcoreapp2.2\eSyaNatureCure.DO.pdb
+D:\eSya Project\Solution\Project_eSyaWebAPI\eSyaNatureCure.WebAPI\trunk\eSyaNatureCure.IF\obj\Release\netcoreapp2.2\eSyaNatureCure.IF.csprojAssemblyReference.cache
+D:\eSya Project\Solution\Project_eSyaWebAPI\eSyaNatureCure.WebAPI\trunk\eSyaNatureCure.IF\obj\Release\netcoreapp2.2\eSyaNatureCure.IF.csproj.CoreCompileInputs.cache
+D:\eSya Project\Solution\Project_eSyaWebAPI\eSyaNatureCure.WebAPI\trunk\eSyaNatureCure.IF\obj\Release\netcoreapp2.2\eSyaNatureCure.IF.AssemblyInfoInputs.cache
+D:\eSya Project\Solution\Project_eSyaWebAPI\eSyaNatureCure.WebAPI\trunk\eSyaNatureCure.IF\obj\Release\netcoreapp2.2\eSyaNatureCure.IF.AssemblyInfo.cs
+D:\eSya Project\Solution\Project_eSyaWebAPI\eSyaNatureCure.WebAPI\trunk\eSyaNatureCure.IF\obj\Release\netcoreapp2.2\eSyaNatureCure.IF.csproj.CopyComplete
+D:\eSya Project\Solution\Project_eSyaWebAPI\eSyaNatureCure.WebAPI\trunk\eSyaNatureCure.IF\obj\Release\netcoreapp2.2\eSyaNatureCure.IF.dll
+D:\eSya Project\Solution\Project_eSyaWebAPI\eSyaNatureCure.WebAPI\trunk\eSyaNatureCure.IF\obj\Release\netcoreapp2.2\eSyaNatureCure.IF.pdb

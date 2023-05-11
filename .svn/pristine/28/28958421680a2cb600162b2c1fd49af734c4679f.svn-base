@@ -1,0 +1,204 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+using eSyaNatureCure.DO;
+using eSyaNatureCure.IF;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
+
+namespace eSyaNatureCure.WebAPI.Controllers
+{
+    [Route("api/[controller]/[action]")]
+    [ApiController]
+    public class DonorMasterController : ControllerBase
+    {
+        private readonly IDonorMasterRepository _donorMasterRepository;
+
+        public DonorMasterController(IDonorMasterRepository donorMasterRepository)
+        {
+            _donorMasterRepository = donorMasterRepository;
+
+        }
+
+        #region Donor Rules
+        /// <summary>
+        /// Getting   All Donor Rules.
+        /// UI Reffered - Donor Rules
+        /// </summary>
+        [HttpGet]
+        public async Task<IActionResult> GetAllDonorRules()
+        {
+            var d_rules = await _donorMasterRepository.GetAllDonorRules();
+            return Ok(d_rules);
+        }
+
+        /// <summary>
+        /// Getting   Active Donor Rules.
+        /// UI Reffered - Donor Rules
+        /// </summary>
+        [HttpGet]
+        public async Task<IActionResult> GetActiveDonorRules()
+        {
+            var d_rules = await _donorMasterRepository.GetActiveDonorRules();
+            return Ok(d_rules);
+        }
+
+        /// <summary>
+        /// Insert  Donor Rules.
+        /// UI Reffered -Donor Rules
+        /// </summary>
+        [HttpPost]
+        public async Task<IActionResult> InsertIntoDonorRule(DO_DonorRules obj)
+        {
+            var msg = await _donorMasterRepository.InsertIntoDonorRule(obj);
+            return Ok(msg);
+
+        }
+        /// <summary>
+        /// Update  Donor Rules.
+        /// UI Reffered -Donor Rules
+        /// </summary>
+        [HttpPost]
+        public async Task<IActionResult> UpdateDonorRule(DO_DonorRules obj)
+        {
+            var msg = await _donorMasterRepository.UpdateDonorRule(obj);
+            return Ok(msg);
+
+        }
+        /// <summary>
+        /// Active/De Active Donor Rules.
+        /// UI Reffered -Donor Rules
+        /// Params status-Donor Rules
+        /// </summary>
+        [HttpGet]
+        public async Task<IActionResult> ActiveOrDeActiveDonorRule(bool status, int donortype)
+        {
+            var msg = await _donorMasterRepository.ActiveOrDeActiveDonorRule(status, donortype);
+            return Ok(msg);
+
+        }
+
+        /// <summary>
+        /// Getting  Room Types  by Donor Type.
+        /// UI Reffered - Donor Registered
+        /// </summary>
+        [HttpGet]
+        public async Task<IActionResult> GetRoomTypesbyDonorId(int donortype)
+        {
+            var _rtypes = await _donorMasterRepository.GetRoomTypesbyDonorId(donortype);
+            return Ok(_rtypes);
+        }
+        /// <summary>
+        /// Getting  Discount   by Donor Type.
+        /// UI Reffered - Donor Registered
+        /// </summary>
+        [HttpGet]
+        public async Task<IActionResult> GetDiscountbyDonorId(int donortype, int roomType)
+        {
+            var _rtypes = await _donorMasterRepository.GetDiscountbyDonorId(donortype, roomType);
+            return Ok(_rtypes);
+        }
+        #endregion
+
+        #region Donor Package Link
+        /// <summary>
+        /// Getting   Donor Packge Link List by Package ID.
+        /// UI Reffered - Donor Package Link
+        /// </summary>
+        [HttpGet]
+        public async Task<IActionResult> GetDonorLinkbyPackage(int packageId)
+        {
+            var dp_link = await _donorMasterRepository.GetDonorLinkbyPackage(packageId);
+            return Ok(dp_link);
+        }
+
+        /// <summary>
+        /// Insert  Donor Package Link.
+        /// UI Reffered -Donor Package Link.
+        /// </summary>
+        [HttpPost]
+        public async Task<IActionResult> InsertOrUpdateDonorLinkwithPackage(DO_DonorPackageLink obj)
+        {
+            var msg = await _donorMasterRepository.InsertOrUpdateDonorLinkwithPackage(obj);
+            return Ok(msg);
+
+        }
+        #endregion
+
+        #region Donor Rgistration
+        /// <summary>
+        /// Getting  Donor  Registerd List.
+        /// UI Reffered - Donor Registered
+        /// </summary>
+        [HttpGet]
+        public async Task<IActionResult> GetDonorsListbyBusinesskey(int businesskey)
+        {
+            var d_regs = await _donorMasterRepository.GetDonorsListbyBusinesskey(businesskey);
+            return Ok(d_regs);
+        }
+
+        /// <summary>
+        /// Insert  Donor Registerd.
+        /// UI Reffered -Donor Registerd
+        /// </summary>
+        [HttpPost]
+        public async Task<IActionResult> InsertIntoDonorRegistration(DO_DonorRegistration obj)
+        {
+            var msg = await _donorMasterRepository.InsertIntoDonorRegistration(obj);
+            return Ok(msg);
+
+        }
+        /// <summary>
+        /// Update  Donor Registerd.
+        /// UI Reffered -Donor Registerd
+        /// </summary>
+        [HttpPost]
+        public async Task<IActionResult> UpdateIntoDonorRegistration(DO_DonorRegistration obj)
+        {
+            var msg = await _donorMasterRepository.UpdateIntoDonorRegistration(obj);
+            return Ok(msg);
+
+        }
+        /// <summary>
+        /// Active/De Active Donor Rules.
+        /// UI Reffered -Donor Rules
+        /// Params status-Donor Rules
+        /// </summary>
+        [HttpGet]
+        public async Task<IActionResult> ActiveOrDeActiveDonorRegistration(bool status, int businesskey, int donorId)
+        {
+            var msg = await _donorMasterRepository.ActiveOrDeActiveDonorRegistration(status, businesskey, donorId);
+            return Ok(msg);
+
+        }
+        #endregion
+
+        #region Address
+        [HttpGet]
+        public async Task<IActionResult> GetStateList(int isdCode)
+        {
+            var states = await _donorMasterRepository.GetStateList(isdCode);
+            return Ok(states);
+        }
+        [HttpGet]
+        public async Task<IActionResult> GetCityList(int isdCode, int? stateCode)
+        {
+            var cities = await _donorMasterRepository.GetCityList(isdCode, stateCode);
+            return Ok(cities);
+        }
+        [HttpGet]
+        public async Task<IActionResult> GetAreaList(int isdCode, int? stateCode, int? cityCode)
+        {
+            var areas = await _donorMasterRepository.GetAreaList(isdCode, stateCode, cityCode);
+            return Ok(areas);
+        }
+        [HttpGet]
+        public async Task<IActionResult> GetAreaDetailsbyPincode(int isdCode, string pincode)
+        {
+            var area = await _donorMasterRepository.GetAreaDetailsbyPincode(isdCode, pincode);
+            return Ok(area);
+        }
+        #endregion
+    }
+}

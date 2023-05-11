@@ -1,0 +1,81 @@
+﻿using eSyaNatureCure.DL.Entities;
+using eSyaNatureCure.DO;
+using eSyaNatureCure.IF;
+using Microsoft.EntityFrameworkCore;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace eSyaNatureCure.DL.Repository
+{
+   public class GuestBookingRepository: IGuestBookingRepository
+    {
+        public async Task<List<DO_GuestBooking>> GetGuestBookingBySearchCreteria(int businessKey, int roomTypeId,
+           string roomNumber, string bedNumber, string occupancyType, string gender, DateTime bookingFrom, DateTime bookingTo, DateTime checkInDate, DateTime checkOutDate)
+        {
+            try
+            {
+                using (var db = new eSyaEnterprise())
+                {
+                    var ds = db.GtGptbkh
+                     .Join(db.GtGptbkp,
+                         a => new { a.BusinessKey, a.BookingKey },
+                         p => new { p.BusinessKey, p.BookingKey },
+                         (a, p) => new { a, p })
+                     
+                     .Join(db.GtGprmty,
+                        apd => apd.p.RoomTypeId,
+                        s => s.RoomTypeId,
+                        (apd, s) => new { apd, s })
+                     .GroupJoin(db.GtGptbkg,
+                        apds => new { apds.apd.a.BusinessKey, apds.apd.a.BookingKey},
+                         m => new { m.BusinessKey, m.BookingKey },
+                        (apds, m) => new { apds, m = m.FirstOrDefault() })
+                     .Where(w => w.apds.apd.a.BusinessKey == businessKey
+                                    && w.apds.apd.a.BookingDate.Date >= bookingFrom.Date
+                                    && w.apds.apd.a.BookingDate.Date <= bookingTo.Date
+                                    && w.apds.apd.a.CheckInDate.Date >= checkInDate.Date
+                                    && w.apds.apd.a.CheckOutDate.Date <= checkOutDate.Date
+                                    && (w.apds.apd.p.RoomTypeId == roomTypeId || roomTypeId == 0)
+                                    && (w.apds.apd.p.RoomNumber == roomNumber || roomNumber == "")
+                                    && (w.apds.apd.p.BedNumber == bedNumber || bedNumber == "")
+                                    && (w.apds.apd.p.OccupancyType == occupancyType || occupancyType == "")
+                                    && w.m.Gender == gender
+                                    && (bool)w.m.IsCheckedIn == true && (bool)w.m.IsCheckedOut==false)
+                     .Select(r => new DO_GuestBooking
+                     {
+                         BusinessKey = r.apds.apd.a.BusinessKey,
+                         BookingKey = r.apds.apd.a.BookingKey,
+                         BookingDate = r.apds.apd.a.BookingDate.Date,
+                         CheckInDate = r.apds.apd.a.CheckInDate.Date,
+                         CheckOutDate = r.apds.apd.a.CheckOutDate.Date,
+                         FirstName = r.m != null ? r.m.FirstName : "",
+                         LastName = r.m != null ? r.m.LastName : "",
+                         Age = r.m.AgeYy,
+                         Gender=r.m.Gender,
+                         MobileNo=r.m.MobileNumber,
+                         NetPackageAmount=r.apds.apd.a.NetPackageAmount,
+                         PaymentMethod =r.apds.apd.a.PaymentMethod,
+                         PaymentReceived=r.apds.apd.a.PaymentReceived,
+                         RoomTypeId = r.apds.apd.p.RoomTypeId,
+                         RoomTypeName = r.apds.s.RoomTypeDesc,
+                         RoomTypeNumber = r.apds.apd.p.RoomNumber,
+                         BedNumber = r.apds.apd.p.BedNumber,
+                         OccupancyType = r.apds.apd.p.OccupancyType,
+                         PackagePrice = r.apds.apd.p.PackagePrice,
+                        
+                     }).ToListAsync();
+
+                   
+                    return await ds;
+                }
+            }
+            catch (Exception ex)
+            {
+                throw ex;
+            }
+        }
+    }
+}

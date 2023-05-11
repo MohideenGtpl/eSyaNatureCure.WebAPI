@@ -1,0 +1,117 @@
+﻿using eSyaNatureCure.DL.Entities;
+using eSyaNatureCure.DO;
+using eSyaNatureCure.IF;
+using Microsoft.EntityFrameworkCore;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace eSyaNatureCure.DL.Repository
+{
+    public class FirstConsultationRepository : IFirstConsultationRepository
+    {
+        public async Task<List<DO_BookinDetails>> GetConsultaionList(int businessKey)
+        {
+            using (var db = new eSyaEnterprise())
+            {
+                try
+                {
+                    var ds = db.GtGptbkg
+                        .Join(db.GtGptbkh,
+                        d=> new { d.BusinessKey, d.BookingKey },
+                        h=> new { h.BusinessKey, h.BookingKey },
+                        (d, h) => new { d, h })
+                        .Where(w=> w.d.BusinessKey == businessKey 
+                       // && w.h.CheckInDate.Date == System.DateTime.Now.Date 
+                        && w.d.IsCheckedIn==false)
+                        .Select(r =>
+                         new DO_BookinDetails
+                         {
+                             BookingKey=r.d.BookingKey,
+                             GuestId = r.d.GuestId,
+                             PackageId=r.h.PackageId,
+                             Uhid=r.d.Uhid,
+                             FirstName = r.d.FirstName,
+                             LastName = r.d.LastName,
+                             Gender = r.d.Gender,
+                             AgeYy = r.d.AgeYy,
+                             MobileNumber = r.d.MobileNumber,
+                             EmailId = r.d.EmailId
+
+                         }).ToListAsync();
+
+                    return await ds;
+
+
+                }
+                catch (Exception ex)
+                {
+                    throw ex;
+                }
+            }
+        }
+        public async Task<DO_ReturnParameter> ConsultaionConfirmation(DO_GuestCheckInDetails obj)
+        {
+            using (var db = new eSyaEnterprise())
+            {
+                using (var dbContext = db.Database.BeginTransaction())
+                {
+                    try
+                    {
+                        var bd = await db.GtGptbkg.Where(w => w.BusinessKey == obj.BusinessKey && w.BookingKey == obj.BookingKey && w.GuestId == obj.GuestId).FirstOrDefaultAsync();                       
+                        if (bd != null)
+                        {
+                            bd.IsCheckedIn = true;
+                            
+                            bd.ModifiedBy = obj.UserID;
+                            bd.ModifiedOn = System.DateTime.Now;
+                            bd.ModifiedTerminal = obj.TerminalID;
+                        }
+                        var l_activity = await db.GtGppkcv
+                             .Where(w => w.PackageId == obj.PackageId && w.ActiveStatus)
+                             .Select(r =>
+                          new GtGptbah 
+                          {
+                              BusinessKey = obj.BusinessKey,
+                              Ipnumber = Convert.ToUInt32(obj.BookingKey.ToString() + obj.GuestId.ToString()),
+                              SerialNumber = 0,
+                              HospitalNumber = obj.UHID ?? 0,
+                              ActivityId =r.ActivityId,
+                              ActivityDayId=r.DayId,
+                              ActivityDate= System.DateTime.Now.Date.AddDays(r.DayId-1),
+                              ActivityFromTime=r.FromTime ?? new TimeSpan(),
+                              ActivityToTime=r.ToTime ?? new TimeSpan(),
+                              ActiveStatus=true,
+                              ActivityStatus="N",
+
+                              FormId="0",
+                              CreatedBy= obj.UserID,
+                              CreatedOn = System.DateTime.Now,
+                              CreatedTerminal = obj.TerminalID,
+                          }
+                            ).ToListAsync();
+                        var _serial = db.GtGptbah.Select(s => s.SerialNumber).DefaultIfEmpty().Max();
+                        foreach (GtGptbah ac in l_activity)
+                        {
+                            _serial += 1;
+                            ac.SerialNumber = _serial;
+                            db.GtGptbah.Add(ac);
+                        }
+                        
+                        await db.SaveChangesAsync();
+                        dbContext.Commit();
+
+                        return new DO_ReturnParameter() { Status = true, Message = "Confirmed Sucessfully" };
+                    }
+                    catch (Exception ex)
+                    {
+                        throw ex;
+                    }
+                }
+            }
+        }
+
+    }
+}

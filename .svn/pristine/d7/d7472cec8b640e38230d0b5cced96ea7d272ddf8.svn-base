@@ -1,0 +1,20 @@
+﻿using eSyaNatureCure.DO;
+using System;
+using System.Collections.Generic;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace eSyaNatureCure.IF
+{
+    public interface IGuestCheckOutRepository
+    {
+        Task<DO_ReturnParameter> CreateGuestBill(DO_PatientBillHeader obj);
+
+        Task<List<DO_PatientBillDetails>> GetGuestServiceBilling(int businessKey, long bookingKey);
+
+        Task<DO_PatientBillHeader> GetGuestBillingSummary(int businessKey, long bookingKey);
+        Task<DO_ReturnParameter> GuestCheckOutProcess(DO_GuestCheckInDetails obj);
+
+        Task<DO_ReturnParameter> GetGuestCheckOutStatus(int businessKey, long bookingKey, int guestId);
+    }
+}

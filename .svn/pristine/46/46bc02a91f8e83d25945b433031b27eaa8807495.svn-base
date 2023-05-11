@@ -1,0 +1,69 @@
+﻿using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+using eSyaNatureCure.DO;
+using eSyaNatureCure.IF;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
+
+namespace eSyaNatureCure.WebAPI.Controllers
+{
+    [Route("api/[controller]/[action]")]
+    [ApiController]
+    public class PackagePriceController : ControllerBase
+    {
+        private readonly IPackagePriceRepository _PackagePriceRepository;
+
+        public PackagePriceController(IPackagePriceRepository PackagePriceRepository)
+        {
+            _PackagePriceRepository = PackagePriceRepository;
+        }
+        #region Package Price
+        /// <summary>
+        /// Getting   Package Price by PackageId.
+        /// UI Reffered - PackagePrice
+        /// </summary>
+        [HttpGet]
+        public async Task<IActionResult> GetAllPackagePricesbyPackageId(int packageId)
+        {
+            var PackagePrice = await _PackagePriceRepository.GetAllPackagePricesbyPackageId(packageId);
+            return Ok(PackagePrice);
+        }
+
+        /// <summary>
+        /// Insert  Package Price.
+        /// UI Reffered -Package Price
+        /// </summary>
+        [HttpPost]
+        public async Task<IActionResult> InsertPackagePrice(DO_PackagePrice obj)
+        {
+            var msg = await _PackagePriceRepository.InsertPackagePrice(obj);
+            return Ok(msg);
+
+        }
+        /// <summary>
+        /// Update  Package Price.
+        /// UI Reffered -Package Price
+        /// </summary>
+        [HttpPost]
+        public async Task<IActionResult> UpdatePackagePrice(DO_PackagePrice obj)
+        {
+            var msg = await _PackagePriceRepository.UpdatePackagePrice(obj);
+            return Ok(msg);
+
+        }
+        /// <summary>
+        /// Active/De Active Package Price.
+        /// UI Reffered -Package Price
+        /// Params status-Package Price
+        /// </summary>
+        [HttpPost]
+        public async Task<IActionResult> ActiveOrDeActivePackagePrice(DO_PackagePrice objprice)
+        {
+            var msg = await _PackagePriceRepository.ActiveOrDeActivePackagePrice(objprice);
+            return Ok(msg);
+
+        }
+        #endregion Package Price
+    }
+}

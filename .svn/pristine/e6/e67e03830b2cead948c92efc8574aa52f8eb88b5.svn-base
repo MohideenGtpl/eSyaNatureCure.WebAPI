@@ -1,0 +1,205 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+using eSyaNatureCure.DO;
+using eSyaNatureCure.IF;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
+
+namespace eSyaNatureCure.WebAPI.Controllers
+{
+    [Route("api/[controller]/[action]")]
+    [ApiController]
+    public class MembershipRegistrationController : ControllerBase
+    {
+        private readonly IMembershipRegistrationRepository _membershipRegistrationRepository;
+
+        public MembershipRegistrationController(IMembershipRegistrationRepository membershipRegistrationRepository)
+        {
+            _membershipRegistrationRepository = membershipRegistrationRepository;
+
+        }
+
+        #region Member Ship Header
+        /// <summary>
+        /// Getting  All  Member Ships.
+        /// UI Reffered -  Member Ship Registration Headers
+        /// </summary>
+        [HttpGet]
+        public async Task<IActionResult> GetMembershipHeaderByNamePrefix(string memberNamePrefix)
+        {
+            var _mheaders = await _membershipRegistrationRepository.GetMembershipHeaderByNamePrefix(memberNamePrefix);
+            return Ok(_mheaders);
+        }
+
+        /// <summary>
+        /// Getting Get Membership.
+        /// UI Reffered - businesskey-memberId-couponId
+        /// </summary>
+        [HttpPost]
+        public async Task<IActionResult> GetMembershipHeaderByMemberId(int businesskey, int memberId)
+        {
+            var _mship = await _membershipRegistrationRepository.GetMembershipHeaderByMemberId(businesskey, memberId);
+            return Ok(_mship);
+        }
+
+        /// <summary>
+        /// Insert   Member Ship.
+        /// UI Reffered - Member Ship Registration
+        /// </summary>
+        [HttpPost]
+        public async Task<IActionResult> InsertIntoMembershipHeader(DO_MembershipHeader obj)
+        {
+            var msg = await _membershipRegistrationRepository.InsertIntoMembershipHeader(obj);
+            return Ok(msg);
+
+        }
+
+        /// <summary>
+        /// Update   Member Ship.
+        /// UI Reffered - Member Ship Registration
+        /// </summary>
+        [HttpPost]
+        public async Task<IActionResult> UpdateMembershipHeader(DO_MembershipHeader obj)
+        {
+            var msg = await _membershipRegistrationRepository.UpdateMembershipHeader(obj);
+            return Ok(msg);
+
+        }
+        /// <summary>
+        /// Active/De Active  Member Ship.
+        /// UI Reffered - Member Ship Registration
+        /// Params status-businesskey-memberId-couponId
+        /// </summary>
+        [HttpGet]
+        public async Task<IActionResult> ActiveOrDeActiveMembershipHeader(bool status, int businesskey, long memberId)
+        {
+            var msg = await _membershipRegistrationRepository.ActiveOrDeActiveMembershipHeader(status, businesskey, memberId);
+            return Ok(msg);
+
+        }
+        #endregion
+
+        #region Member Ship Types
+       
+        /// <summary>
+        /// Getting Get Membership Types.
+        /// UI Reffered - businesskey-memberId
+        /// </summary>
+        [HttpPost]
+        public async Task<IActionResult> GetMembershipTypes(int businesskey, int memberId)
+        {
+            var _mship = await _membershipRegistrationRepository.GetMembershipTypes(businesskey, memberId);
+            return Ok(_mship);
+        }
+
+        /// <summary>
+        /// Insert Or Update into Member Ship Types.
+        /// UI Reffered - Member Ship Registration
+        /// </summary>
+        [HttpPost]
+        public async Task<IActionResult> InsertOrUpdateIntoMembershipType(DO_MembershipType obj)
+        {
+            var msg = await _membershipRegistrationRepository.InsertOrUpdateIntoMembershipType(obj);
+            return Ok(msg);
+
+        }
+
+       
+        /// <summary>
+        /// Active/De Active  Member Ship Type.
+        /// UI Reffered - Member Ship Registration
+        /// Params status-businesskey-memberId-couponId
+        /// </summary>
+        [HttpGet]
+        public async Task<IActionResult> ActiveOrDeActiveMembershipType(bool status, int businesskey, long memberId, string couponId)
+        {
+            var msg = await _membershipRegistrationRepository.ActiveOrDeActiveMembershipType(status, businesskey, memberId, couponId);
+            return Ok(msg);
+
+        }
+        #endregion
+
+        #region Member Ship Donations
+
+        /// <summary>
+        /// Getting Get Membership Donations.
+        /// UI Reffered - businesskey-memberId
+        /// </summary>
+        [HttpPost]
+        public async Task<IActionResult> GetMembershipDonations(int businesskey, int memberId)
+        {
+            var _mship = await _membershipRegistrationRepository.GetMembershipTypes(businesskey, memberId);
+            return Ok(_mship);
+        }
+
+        /// <summary>
+        /// Insert Or Update into Member Ship Donations.
+        /// UI Reffered - Member Ship Registration
+        /// </summary>
+        [HttpPost]
+        public async Task<IActionResult> InsertOrUpdateIntoMembershipDonation(DO_MembershipDonation obj)
+        {
+            var msg = await _membershipRegistrationRepository.InsertOrUpdateIntoMembershipDonation(obj);
+            return Ok(msg);
+
+        }
+
+
+        /// <summary>
+        /// Active/De Active  Member Ship Donations.
+        /// UI Reffered - Member Ship Registration
+        /// Params status-businesskey-memberId-couponId
+        /// </summary>
+        [HttpGet]
+        public async Task<IActionResult> ActiveOrDeActiveMembershipDonation(bool status, int businesskey, long memberId, int serialno)
+        {
+            var msg = await _membershipRegistrationRepository.ActiveOrDeActiveMembershipDonation(status, businesskey, memberId, serialno);
+            return Ok(msg);
+
+        }
+        #endregion
+
+        #region Common Methods
+        /// <summary>
+        /// Get States List by ISD Code for dropdown.
+        /// UI Reffered - Member Ship Registration
+        /// Params ISD Code
+        /// </summary>
+        [HttpGet]
+        public async Task<IActionResult> GetStateList(int isdCode)
+        {
+            var states = await _membershipRegistrationRepository.GetStateList(isdCode);
+            return Ok(states);
+
+        }
+
+        /// <summary>
+        /// Get Cities List by ISD and State Code for dropdown.
+        /// UI Reffered - Member Ship Registration
+        /// Params ISD Code-State Code
+        /// </summary>
+        [HttpGet]
+        public async Task<IActionResult> GetCityList(int isdCode, int? stateCode)
+        {
+            var cities = await _membershipRegistrationRepository.GetCityList(isdCode, stateCode);
+            return Ok(cities);
+
+        }
+
+        /// <summary>
+        /// Get MemberShip Types by patientType Id for dropdown.
+        /// UI Reffered - Member Ship Registration
+        /// Params patientTypeId
+        /// </summary>
+        [HttpGet]
+        public IActionResult GetMembershipTypebyPatientId(int patientTypeId)
+        {
+            var mtypes =  _membershipRegistrationRepository.GetMembershipTypebyPatientId(patientTypeId);
+            return Ok(mtypes);
+
+        }
+        #endregion
+    }
+}

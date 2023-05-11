@@ -1,0 +1,84 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+using eSyaNatureCure.DO;
+using eSyaNatureCure.IF;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
+
+namespace eSyaNatureCure.WebAPI.Controllers
+{
+    [Route("api/[controller]/[action]")]
+    [ApiController]
+    public class PackageMasterController : ControllerBase
+    {
+        private readonly IPackageMasterRepository _PackageMasterRepository;
+       
+        public PackageMasterController(IPackageMasterRepository PackageMasterRepository)
+        {
+            _PackageMasterRepository = PackageMasterRepository;
+           
+        }
+
+        #region Package Master
+        /// <summary>
+        /// Getting  Package Master.
+        /// UI Reffered - Package Master
+        /// </summary>
+        [HttpGet]
+        public async Task<IActionResult> GetAllPackageMasters()
+        {
+            var pkg_masters =await _PackageMasterRepository.GetAllPackageMasters();
+            return Ok (pkg_masters);
+        }
+
+        /// <summary>
+        /// Getting Active Package Master for dropdown.
+        /// UI Reffered - Package Master
+        /// </summary>
+        [HttpGet]
+        public async Task<IActionResult> GetActivePackageMasters()
+        {
+            var pkg_masters = await _PackageMasterRepository.GetActivePackageMasters();
+            return Ok(pkg_masters);
+        }
+
+        /// <summary>
+        /// Insert  Package Master.
+        /// UI Reffered -Package Master
+        /// </summary>
+        [HttpPost]
+        public async Task<IActionResult> InsertPackageMaster(DO_PackageMaster obj)
+        {
+            var msg = await _PackageMasterRepository.InsertPackageMaster(obj);
+            return Ok(msg);
+
+        }
+
+        /// <summary>
+        /// Update  Package Master.
+        /// UI Reffered -Package Master
+        /// </summary>
+        [HttpPost]
+        public async Task<IActionResult> UpdatePackageMaster(DO_PackageMaster obj)
+        {
+            var msg = await _PackageMasterRepository.UpdatePackageMaster(obj);
+            return Ok(msg);
+
+        }
+        /// <summary>
+        /// Active/De Active Package Master.
+        /// UI Reffered -Package Master
+        /// Params status-packageId
+        /// </summary>
+        [HttpGet]
+        public async Task<IActionResult> ActiveOrDeActivePackageMaster(bool status, int packageId)
+        {
+            var msg = await _PackageMasterRepository.ActiveOrDeActivePackageMaster(status, packageId);
+            return Ok(msg);
+
+        }
+        #endregion Package Master
+    }
+}

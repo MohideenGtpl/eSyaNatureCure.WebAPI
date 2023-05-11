@@ -1,0 +1,44 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Text;
+
+namespace eSyaNatureCure.DO
+{
+    public class DO_PackageMaster
+    {
+        public int PackageId { get; set; }
+        public string PackageDesc { get; set; }
+        public string ServiceDesc { get; set; }
+        public int BookingRule { get; set; }
+        public int BookingWindow { get; set; }
+        public int NoOfNights { get; set; }
+        public string CheckInWeekDays { get; set; }
+        public TimeSpan CheckInFromTime { get; set; }
+        public TimeSpan CheckInToTime { get; set; }
+        public TimeSpan CheckOutFromTime { get; set; }
+        public TimeSpan CheckOutToTime { get; set; }
+        public bool ActiveStatus { get; set; }
+        public string FormId { get; set; }
+        public int UserID { get; set; }
+        public string TerminalID { get; set; }
+        public List<Do_WeekDays> _lstweekdays { get; set; }
+       
+    }
+    public class DO_BlockedPackage
+    {
+        public int BusinessKey { get; set; }
+        public int PackageId { get; set; }
+        public DateTime BlockedPackageDate { get; set; }
+        public string PackageDesc { get; set; }
+        public bool ActiveStatus { get; set; }
+        public string FormId { get; set; }
+        public int UserID { get; set; }
+        public string TerminalID { get; set; }
+    }
+    public class Do_WeekDays
+    {
+        public int PackageId { get; set; }
+        public string CheckInWeekdays { get; set; }
+        public bool ActiveStatus { get; set; }
+    }
+}

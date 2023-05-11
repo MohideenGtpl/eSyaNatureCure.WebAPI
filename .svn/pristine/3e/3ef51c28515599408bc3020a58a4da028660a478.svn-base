@@ -1,0 +1,22 @@
+﻿using eSyaNatureCure.DO;
+using System;
+using System.Collections.Generic;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace eSyaNatureCure.IF
+{
+   public  interface IGuestCheckInRepository
+    {
+        Task<DO_GuestCheckInDetails> GetGuestDetailById(int businessKey, long bookingKey, int guestId);
+        Task<List<DO_GuestCheckInDetails>> GetGuestDetailsByBookingKey(int businessKey, long bookingKey);
+        Task<DO_ReturnParameter> CreateGuestCheckin(DO_GuestCheckInDetails obj);
+        #region Document Upload
+        Task<List<DO_GuestDocumentUpload>> GetGuestDocumentUploadDetailsByBookingKey(int businessKey, long bookingKey, int guestId);
+        Task<DO_ReturnParameter> InsertGuestDocumentUpload(DO_GuestDocumentUpload obj);
+        Task<DO_ReturnParameter> UpdateGuestDocumentUpload(DO_GuestDocumentUpload obj);
+        Task<DO_ReturnParameter> ActiveOrDeActiveGuestDocumentUpload(DO_GuestDocumentUpload obj);
+        Task<DO_GuestDocumentUpload> GetDocumentUploadbySerialNumber(int businessKey, long bookingKey, int guestId, int serialno);
+        #endregion Document Upload
+    }
+}

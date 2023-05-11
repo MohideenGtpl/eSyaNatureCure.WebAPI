@@ -1,0 +1,9 @@
+D:\eSya Project\Solution\Project_eSyaWebAPI\eSyaNatureCure.WebAPI\trunk\eSyaNatureCure.DO\bin\Release\netcoreapp2.2\eSyaNatureCure.DO.deps.json
+D:\eSya Project\Solution\Project_eSyaWebAPI\eSyaNatureCure.WebAPI\trunk\eSyaNatureCure.DO\bin\Release\netcoreapp2.2\eSyaNatureCure.DO.dll
+D:\eSya Project\Solution\Project_eSyaWebAPI\eSyaNatureCure.WebAPI\trunk\eSyaNatureCure.DO\bin\Release\netcoreapp2.2\eSyaNatureCure.DO.pdb
+D:\eSya Project\Solution\Project_eSyaWebAPI\eSyaNatureCure.WebAPI\trunk\eSyaNatureCure.DO\obj\Release\netcoreapp2.2\eSyaNatureCure.DO.csprojAssemblyReference.cache
+D:\eSya Project\Solution\Project_eSyaWebAPI\eSyaNatureCure.WebAPI\trunk\eSyaNatureCure.DO\obj\Release\netcoreapp2.2\eSyaNatureCure.DO.csproj.CoreCompileInputs.cache
+D:\eSya Project\Solution\Project_eSyaWebAPI\eSyaNatureCure.WebAPI\trunk\eSyaNatureCure.DO\obj\Release\netcoreapp2.2\eSyaNatureCure.DO.AssemblyInfoInputs.cache
+D:\eSya Project\Solution\Project_eSyaWebAPI\eSyaNatureCure.WebAPI\trunk\eSyaNatureCure.DO\obj\Release\netcoreapp2.2\eSyaNatureCure.DO.AssemblyInfo.cs
+D:\eSya Project\Solution\Project_eSyaWebAPI\eSyaNatureCure.WebAPI\trunk\eSyaNatureCure.DO\obj\Release\netcoreapp2.2\eSyaNatureCure.DO.dll
+D:\eSya Project\Solution\Project_eSyaWebAPI\eSyaNatureCure.WebAPI\trunk\eSyaNatureCure.DO\obj\Release\netcoreapp2.2\eSyaNatureCure.DO.pdb

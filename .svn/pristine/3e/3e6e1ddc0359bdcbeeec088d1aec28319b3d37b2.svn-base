@@ -1,0 +1,22 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Text;
+
+namespace eSyaNatureCure.DO
+{
+   public class DO_GuestDocumentUpload
+    {
+        public int BusinessKey { get; set; }
+        public decimal BookingKey { get; set; }
+        public int GuestId { get; set; }
+        public int SerialNo { get; set; }
+        public string DocumentName { get; set; }
+        public string IdentificationNumber { get; set; }
+        public string DocumentUrl { get; set; }
+        public bool ActiveStatus { get; set; }
+        public string FormId { get; set; }
+        public int UserID { get; set; }
+        public string TerminalID { get; set; }
+        public bool Status { get; set; }
+    }
+}

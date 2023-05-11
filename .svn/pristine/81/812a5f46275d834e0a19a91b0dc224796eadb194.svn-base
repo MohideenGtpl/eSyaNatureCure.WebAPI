@@ -1,0 +1,60 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Text;
+
+namespace eSyaNatureCure.DO
+{
+   public class DO_BookinDetails
+    {
+        public int BusinessKey { get; set; }
+        public decimal BookingKey { get; set; }
+        public int GuestId { get; set; }
+        public string FirstName { get; set; }
+        public string MiddleName { get; set; }
+        public string LastName { get; set; }
+        public string Gender { get; set; }
+        public int AgeYy { get; set; }
+        public int Isdcode { get; set; }
+        public string MobileNumber { get; set; }
+        public string EmailId { get; set; }
+        public long? Uhid { get; set; }
+
+        public string GuestName { get; set; }
+        public string RoomTypeDesc { get; set; }
+
+        public int RoomTypeId { get; set; }
+        public string RoomNumber { get; set; }
+        public string BedNumber { get; set; }
+        public string OccupancyType { get; set; }
+        public decimal PackagePrice { get; set; }
+        public decimal TaxPercentage { get; set; }
+        public decimal TaxAmount { get; set; }
+        public int NoOfWeeks { get; set; }
+
+
+        public int PackageId { get; set; }
+        public DateTime BookingDate { get; set; }
+        public DateTime CheckInDate { get; set; }
+        public DateTime CheckOutDate { get; set; }
+        public int NoOfMaleGuest { get; set; }
+        public int NoOfFemaleGuest { get; set; }
+        public decimal TotalPackageAmount { get; set; }
+        public decimal TotalDiscountAmount { get; set; }
+        public decimal TotalTaxAmount { get; set; }
+        public decimal NetPackageAmount { get; set; }
+        public string PaymentMethod { get; set; }
+        public bool PaymentReceived { get; set; }
+        public string BookingStatus { get; set; }
+        public string ReasonforCancellation { get; set; }
+        public bool IsCheckedIn { get; set; }
+        public DateTime? ActualCheckedInDate { get; set; }
+        public bool IsCheckedOut { get; set; }
+        public DateTime? ActualCheckedOutDate { get; set; }
+
+
+        public bool ActiveStatus { get; set; }
+        public string FormId { get; set; }
+        public int UserID { get; set; }
+        public string TerminalID { get; set; }
+    }
+}

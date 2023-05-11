@@ -1,0 +1,21 @@
+﻿using eSyaNatureCure.DO;
+using System;
+using System.Collections.Generic;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace eSyaNatureCure.IF
+{
+   public  interface ICommonMasterRepository
+    {
+        Task<List<DO_ApplicationCodes>> GetApplicationCodesByCodeType(int codeType);
+
+        Task<List<DO_CountryPlaces>> GetCountryPlaceList(int isdCode, int placeType);
+
+        Task<List<DO_CountryArea>> GetCountryAreaList(int isdCode, int? stateCode, int? cityCode);
+
+        Task<List<DO_CountryArea>> GetCountryAreaDetailsByPincode(int isdCode, string pincode);
+
+        Task<List<DO_ApplicationCodes>> GetApplicationCodesByCodeTypeList(List<int> l_codeType);
+    }
+}

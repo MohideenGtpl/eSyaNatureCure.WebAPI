@@ -1,0 +1,50 @@
+﻿using eSyaNatureCure.DO;
+using System;
+using System.Collections.Generic;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace eSyaNatureCure.IF
+{
+   public  interface IGuestCheckInRepository
+    {
+        Task<DO_GuestCheckInDetails> GetGuestDetailById(int businessKey, long bookingKey, int guestId);
+        Task<List<DO_GuestCheckInDetails>> GetGuestDetailsByBookingKey(int businessKey, long bookingKey);
+        Task<DO_ReturnParameter> CreateGuestCheckin(DO_GuestCheckInDetails obj);
+        Task<DO_ReturnParameter> UpdateGuestCheckin(DO_GuestCheckInDetails obj);
+
+        #region Document Upload
+        Task<List<DO_GuestDocumentUpload>> GetGuestDocumentUploadDetailsByBookingKey(int businessKey, long bookingKey, int guestId);
+        Task<DO_ReturnParameter> InsertGuestDocumentUpload(DO_GuestDocumentUpload obj);
+        Task<DO_ReturnParameter> UpdateGuestDocumentUpload(DO_GuestDocumentUpload obj);
+        Task<DO_ReturnParameter> ActiveOrDeActiveGuestDocumentUpload(DO_GuestDocumentUpload obj);
+        Task<DO_GuestDocumentUpload> GetDocumentUploadbySerialNumber(int businessKey, long bookingKey, int guestId, int serialno);
+        Task<DO_GuestDocumentUpload> DeleteDocument(int businessKey, long bookingKey, int guestId, int serialno);
+        #endregion Document Upload
+
+        #region Address
+        Task<List<DO_Place>> GetStateList(int isdCode);
+
+        Task<List<DO_Place>> GetCityList(int isdCode, int? stateCode);
+
+        Task<List<DO_AddressIN>> GetAreaList(int isdCode, int? stateCode, int? cityCode);
+
+        Task<DO_AddressIN> GetAreaDetailsbyPincode(int isdCode, string pincode);
+        #endregion
+
+        #region Rescheduling
+        Task<List<DO_Rescheduling>> GetGuestReschedulingByBookingKey(int businessKey, long bookingKey);
+        Task<DO_ReturnParameter> InsertGuestRescheduling(DO_Rescheduling obj);
+        #endregion
+
+        #region Room change
+        Task<List<DO_RoomChange>> GetGuestRoomchangeByBookingKey(int businessKey, long bookingKey, int guestId);
+        Task<DO_ReturnParameter> InsertGuestRoomchange(DO_RoomChange obj);
+        #endregion
+
+        #region Service
+        Task<List<DO_Service>> GetGuestServiceByBookingKey(int businessKey, long bookingKey);
+        Task<DO_ReturnParameter> InsertGuestService(DO_Service obj);
+        #endregion
+    }
+}
